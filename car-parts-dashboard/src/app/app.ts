@@ -12,6 +12,20 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { Chart, registerables } from 'chart.js';
+import {
+  type VehicleOption,
+  buildVehicleOptions,
+  defaultYear,
+  searchVehicles,
+  yearChoices,
+} from './vehicle-search';
+import {
+  SHOP_TYPES,
+  estimateService,
+  formatMiles,
+  formatYears,
+  replacementCycleFor,
+} from './service-estimate';
 
 Chart.register(...registerables);
 
@@ -106,6 +120,21 @@ export class App implements OnInit {
   vinError = signal<string | null>(null);
   decodedVehicle = signal<DecodedVehicle | null>(null);
 
+  // Vehicle search (type-ahead suggestions, no VIN needed)
+  vehicleQuery = signal<string>('');
+  suggestionsOpen = signal<boolean>(false);
+  activeSuggestion = signal<number>(-1);
+  showVinPanel = signal<boolean>(false);
+
+  // Progressive disclosure: secondary controls start hidden
+  showMoreFilters = signal<boolean>(false);
+  expandedSkus = signal<string[]>([]);
+
+  // Summary card tabs: average cost, then service (parts plus labor)
+  summaryTab = signal<'cost' | 'service'>('cost');
+  shopTypeId = signal<string>('typical');
+  readonly shopTypes = SHOP_TYPES;
+
   // Live Multi-Retailer Web Price Hunter State
   isHunting = signal<boolean>(false);
   huntingStep = signal<string>('');
@@ -192,6 +221,34 @@ export class App implements OnInit {
   });
 
   // ==========================================
+  // VEHICLE SEARCH
+  // ==========================================
+
+  vehicleOptions = computed(() => buildVehicleOptions(this.parts()));
+
+  vehicleSearch = computed(() =>
+    searchVehicles(this.vehicleOptions(), this.vehicleQuery(), this.vehicleQuery().trim() ? 8 : 6)
+  );
+
+  vehicleSuggestions = computed(() => this.vehicleSearch().results);
+
+  // One-tap shortcuts shown under the search box
+  quickVehicles = computed(() => this.vehicleOptions().filter((v) => v.inCatalog).slice(0, 5));
+
+  vehicleSelected = computed(
+    () => this.selectedMake() !== 'All' && this.selectedModel() !== 'All'
+  );
+
+  yearOptions = computed(() => {
+    const make = this.selectedMake().toLowerCase();
+    const model = this.selectedModel().toLowerCase();
+    const match = this.vehicleOptions().find(
+      (v) => v.make.toLowerCase() === make && v.model.toLowerCase() === model
+    );
+    return yearChoices(match ? match.years : [], this.selectedYear(), new Date().getFullYear());
+  });
+
+  // ==========================================
   // UNIVERSAL FILTERED PARTS
   // ==========================================
 
@@ -270,6 +327,11 @@ export class App implements OnInit {
     return deduplicated;
   });
 
+  // Results show once a vehicle is chosen, or when viewing the watchlist
+  hasResults = computed(
+    () => (this.vehicleSelected() || this.showWatchlistOnly()) && this.filteredParts().length > 0
+  );
+
   // KPI Metrics with Cross-Retailer Highlights
   kpiMetrics = computed(() => {
     const subset = this.filteredParts();
@@ -299,7 +361,16 @@ export class App implements OnInit {
 
     const uniqueStores = Array.from(new Set(subset.map((p) => p.source))).length;
 
+    const mean = (values: number[]): number | null =>
+      values.length ? values.reduce((sum, v) => sum + v, 0) / values.length : null;
+    const allPrices = subset.map((p) => p.price_usd);
+
     return {
+      avgPrice: mean(allPrices),
+      avgOem: mean(oem.map((p) => p.price_usd)),
+      avgAftermarket: mean(aftermarket.map((p) => p.price_usd)),
+      minPrice: allPrices.length ? Math.min(...allPrices) : null,
+      maxPrice: allPrices.length ? Math.max(...allPrices) : null,
       oemPrice: oemMin,
       aftermarketPrice: aftMin,
       bestStore,
@@ -308,6 +379,25 @@ export class App implements OnInit {
       totalCount: subset.length,
       storeCount: uniqueStores,
     };
+  });
+
+  // How often the selected part is usually replaced (miles and/or years)
+  replacementCycle = computed(() => {
+    const cycle = replacementCycleFor(this.selectedCategory());
+    if (!cycle) return null;
+    return { miles: formatMiles(cycle), years: formatYears(cycle) };
+  });
+
+  // Parts (average price) plus labor, for a service center or garage
+  serviceEstimate = computed(() => {
+    const k = this.kpiMetrics();
+    return estimateService({
+      category: this.selectedCategory(),
+      avgAll: k.avgPrice,
+      avgAftermarket: k.avgAftermarket,
+      avgOem: k.avgOem,
+      shopId: this.shopTypeId(),
+    });
   });
 
   constructor() {
@@ -346,7 +436,7 @@ export class App implements OnInit {
           const key = `${p.make}|${p.model}|${p.year}|${p.part_category}|${p.brand}|${p.source}`.toLowerCase();
           if (!seen.has(key)) {
             seen.add(key);
-            cleanData.push(p);
+            cleanData.push({ ...p, year: Number(p.year) });
           }
         }
         this.parts.set(cleanData);
@@ -360,6 +450,10 @@ export class App implements OnInit {
         this.loading.set(false);
       },
     });
+  }
+
+  money(value: number | null | undefined): string {
+    return value === null || value === undefined ? 'N/A' : '$' + value.toFixed(2);
   }
 
   // Calculate savings for an individual part vs OEM benchmark
@@ -625,6 +719,139 @@ export class App implements OnInit {
   }
 
   // ==========================================
+  // VEHICLE SEARCH ACTIONS
+  // ==========================================
+
+  onVehicleQueryChange(value: string): void {
+    this.vehicleQuery.set(value);
+    this.suggestionsOpen.set(true);
+    this.activeSuggestion.set(-1);
+  }
+
+  openSuggestions(): void {
+    this.suggestionsOpen.set(true);
+  }
+
+  closeSuggestions(): void {
+    this.suggestionsOpen.set(false);
+    this.activeSuggestion.set(-1);
+  }
+
+  // Short delay so a tap on a suggestion is registered before the list closes
+  closeSuggestionsSoon(): void {
+    setTimeout(() => this.closeSuggestions(), 150);
+  }
+
+  onSuggestionKey(event: KeyboardEvent): void {
+    const list = this.vehicleSuggestions();
+    if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+      event.preventDefault();
+      this.suggestionsOpen.set(true);
+      if (!list.length) return;
+      const step = event.key === 'ArrowDown' ? 1 : -1;
+      this.activeSuggestion.set((this.activeSuggestion() + step + list.length) % list.length);
+    } else if (event.key === 'Enter') {
+      const index = this.activeSuggestion();
+      if (index < 0 && !this.vehicleQuery().trim()) return;
+      const pick = list[index < 0 ? 0 : index];
+      if (pick) {
+        event.preventDefault();
+        this.selectVehicle(pick);
+      }
+    } else if (event.key === 'Escape') {
+      this.closeSuggestions();
+    }
+  }
+
+  // useQueryYear: a year typed in the box ("2018 c300") is applied when picking from suggestions
+  selectVehicle(option: VehicleOption, useQueryYear = true): void {
+    const typedYear = useQueryYear ? this.vehicleSearch().year : null;
+
+    this.decodedVehicle.set(null);
+    this.vinError.set(null);
+    this.selectedMake.set(option.make);
+    this.selectedModel.set(option.model);
+    this.selectedYear.set(defaultYear(option, typedYear));
+    this.selectedRetailer.set('All');
+    this.searchQuery.set('');
+    this.vehicleQuery.set('');
+    this.showVinPanel.set(false);
+    this.closeSuggestions();
+    this.huntIfNoParts();
+  }
+
+  setYear(value: number | string): void {
+    const year = Number(value);
+    if (!year) return;
+    this.selectedYear.set(year);
+    this.huntIfNoParts();
+  }
+
+  changeVehicle(): void {
+    this.clearVin();
+    this.vehicleQuery.set('');
+    this.closeSuggestions();
+  }
+
+  // Home button: back to the first screen (vehicle search only)
+  goHome(): void {
+    this.changeVehicle();
+    this.showWatchlistOnly.set(false);
+    this.showVinPanel.set(false);
+    this.showMoreFilters.set(false);
+    this.selectedCategory.set('Brake Pads');
+    this.selectedRetailer.set('All');
+    this.selectedTier.set('All');
+    this.searchQuery.set('');
+    this.expandedSkus.set([]);
+    this.summaryTab.set('cost');
+    this.selectedPartForHistory.set(null);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  setSummaryTab(tab: 'cost' | 'service'): void {
+    this.summaryTab.set(tab);
+  }
+
+  setShopType(id: string): void {
+    this.shopTypeId.set(id);
+  }
+
+  /** Whole dollars for ranges, for example "$205 to $506". */
+  moneyRange(span: { low: number; high: number } | null): string {
+    if (!span) return 'N/A';
+    return `$${Math.round(span.low).toLocaleString('en-US')} to $${Math.round(span.high).toLocaleString('en-US')}`;
+  }
+
+  // Same behaviour as after a VIN decode: search the stores when nothing is saved yet
+  private huntIfNoParts(): void {
+    setTimeout(() => {
+      if (!this.filteredParts().length && this.autoTriggerHunter()) {
+        this.triggerPriceHunter();
+      }
+    }, 120);
+  }
+
+  toggleVinPanel(): void {
+    this.showVinPanel.set(!this.showVinPanel());
+  }
+
+  toggleMoreFilters(): void {
+    this.showMoreFilters.set(!this.showMoreFilters());
+  }
+
+  isExpanded(sku: string): boolean {
+    return this.expandedSkus().includes(sku);
+  }
+
+  toggleDetails(sku: string): void {
+    const current = this.expandedSkus();
+    this.expandedSkus.set(
+      current.includes(sku) ? current.filter((s) => s !== sku) : [...current, sku]
+    );
+  }
+
+  // ==========================================
   // UNIVERSAL MULTI-RETAILER PRICE HUNTER
   // ==========================================
 
@@ -671,7 +898,7 @@ export class App implements OnInit {
           }
           setTimeout(() => {
             this.isHunting.set(false);
-            this.copyToast.set(`🚀 Found ${resp.items?.length || 0} listings across RockAuto, AutoZone & FCP Euro!`);
+            this.copyToast.set(`Found ${resp.items?.length || 0} listings across RockAuto, AutoZone and FCP Euro.`);
             setTimeout(() => this.copyToast.set(null), 3500);
           }, 700);
         },
@@ -891,7 +1118,7 @@ export class App implements OnInit {
 
     setTimeout(() => {
       this.isHunting.set(false);
-      this.copyToast.set(`🚀 Found ${generatedParts.length} verified listings across RockAuto, AutoZone & OEM Direct!`);
+      this.copyToast.set(`Found ${generatedParts.length} listings across RockAuto, AutoZone and OEM Direct.`);
       setTimeout(() => this.copyToast.set(null), 3500);
     }, 600);
   }
@@ -945,7 +1172,7 @@ export class App implements OnInit {
       this.copyToast.set('Removed from Watchlist');
     } else {
       updated = [...current, sku];
-      this.copyToast.set('⭐ Added to Watchlist!');
+      this.copyToast.set('Added to watchlist');
     }
 
     this.watchlistSkus.set(updated);
@@ -989,7 +1216,7 @@ export class App implements OnInit {
 
   saveTargetAlert(): void {
     this.targetAlertSet.set(true);
-    this.copyToast.set(`🔔 Price drop alert set for $${this.targetAlertPrice()?.toFixed(2)} USD!`);
+    this.copyToast.set(`Price alert set for $${this.targetAlertPrice()?.toFixed(2)}`);
     setTimeout(() => this.copyToast.set(null), 3000);
   }
 
@@ -1024,8 +1251,8 @@ export class App implements OnInit {
     }
 
     const isOem = part.tier === 'OEM (Genuine)';
-    const primaryColor = isOem ? '#e11d48' : '#0284c7';
-    const bgGradient = isOem ? 'rgba(225, 29, 72, 0.12)' : 'rgba(2, 132, 199, 0.12)';
+    const primaryColor = isOem ? '#a23f3c' : '#2d5b87';
+    const bgGradient = isOem ? 'rgba(162, 63, 60, 0.10)' : 'rgba(45, 91, 135, 0.10)';
 
     this.historyChart = new Chart(canvas, {
       type: 'line',
@@ -1063,7 +1290,7 @@ export class App implements OnInit {
           y: {
             beginAtZero: false,
             title: { display: true, text: 'Price ($ USD)' },
-            grid: { color: '#f1f5f9' },
+            grid: { color: '#e6e8ec' },
           },
           x: {
             grid: { display: false },
@@ -1119,24 +1346,24 @@ export class App implements OnInit {
           {
             label: 'OEM Dealer Benchmark',
             data: oemPrices,
-            borderColor: '#e11d48',
-            backgroundColor: 'rgba(225, 29, 72, 0.1)',
+            borderColor: '#a23f3c',
+            backgroundColor: 'rgba(162, 63, 60, 0.10)',
             borderWidth: 3,
             pointRadius: 6,
             pointHoverRadius: 8,
-            pointBackgroundColor: '#e11d48',
+            pointBackgroundColor: '#a23f3c',
             tension: 0.25,
             fill: false,
           },
           {
             label: 'Multi-Store Aftermarket Average',
             data: aftPrices,
-            borderColor: '#0284c7',
-            backgroundColor: 'rgba(2, 132, 199, 0.1)',
+            borderColor: '#2d5b87',
+            backgroundColor: 'rgba(45, 91, 135, 0.10)',
             borderWidth: 3,
             pointRadius: 6,
             pointHoverRadius: 8,
-            pointBackgroundColor: '#0284c7',
+            pointBackgroundColor: '#2d5b87',
             tension: 0.25,
             fill: false,
           },
@@ -1163,7 +1390,7 @@ export class App implements OnInit {
           y: {
             beginAtZero: false,
             title: { display: true, text: 'Price (USD)' },
-            grid: { color: '#f1f5f9' },
+            grid: { color: '#e6e8ec' },
           },
           x: {
             grid: { display: false },
@@ -1182,7 +1409,7 @@ export class App implements OnInit {
     const labels = sorted.map((p) => `${p.brand} (${p.source})`);
     const data = sorted.map((p) => p.price_usd);
     const colors = sorted.map((p) =>
-      p.tier === 'OEM (Genuine)' ? '#e11d48' : '#0284c7'
+      p.tier === 'OEM (Genuine)' ? '#a23f3c' : '#2d5b87'
     );
 
     if (this.brandChart) {
@@ -1218,7 +1445,7 @@ export class App implements OnInit {
           x: {
             beginAtZero: true,
             title: { display: true, text: 'Price ($ USD)' },
-            grid: { color: '#f1f5f9' },
+            grid: { color: '#e6e8ec' },
           },
           y: {
             grid: { display: false },
