@@ -1930,3 +1930,380 @@
   background: #0284c7;
   box-shadow: 0 0 8px #0284c7;
 }
+
+/* ========================================================
+   OPTION 2: DIGITAL COCKPIT / AUTOMOTIVE HUD TELEMETRY STYLES
+   ======================================================== */
+
+/* Blueprint SVG Glyphs & Color Systems */
+.hud-glyph-wrap {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  line-height: 1;
+}
+
+.hud-svg {
+  width: 1.15rem;
+  height: 1.15rem;
+  stroke-width: 2;
+  flex-shrink: 0;
+  transition: transform 0.2s ease, filter 0.2s ease;
+}
+
+.comp-pill:hover .hud-svg {
+  transform: scale(1.12);
+}
+
+.svg-brakes {
+  color: #f43f5e;
+  filter: drop-shadow(0 0 4px rgba(244, 63, 94, 0.4));
+}
+
+.svg-powertrain {
+  color: #f59e0b;
+  filter: drop-shadow(0 0 4px rgba(245, 158, 11, 0.4));
+}
+
+.svg-electrical {
+  color: #06b6d4;
+  filter: drop-shadow(0 0 4px rgba(6, 182, 212, 0.4));
+}
+
+.svg-fluid {
+  color: #3b82f6;
+  filter: drop-shadow(0 0 4px rgba(59, 130, 246, 0.4));
+}
+
+.svg-air {
+  color: #10b981;
+  filter: drop-shadow(0 0 4px rgba(16, 185, 129, 0.4));
+}
+
+.svg-suspension {
+  color: #eab308;
+  filter: drop-shadow(0 0 4px rgba(234, 179, 8, 0.4));
+}
+
+/* Navbar HUD Cockpit Tabs */
+.hud-nav-tabs .nav-tab-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  position: relative;
+  font-family: inherit;
+  letter-spacing: 0.02em;
+}
+
+.hud-tab-led {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #64748b;
+  display: inline-block;
+  transition: all 0.25s ease;
+}
+
+.nav-tab-btn.active .hud-tab-led {
+  background: #38bdf8;
+  box-shadow: 0 0 8px #38bdf8, 0 0 14px rgba(56, 189, 248, 0.6);
+  animation: led-pulse 2s infinite ease-in-out;
+}
+
+.hud-tab-badge {
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  padding: 2px 5px;
+  border-radius: 4px;
+  background: rgba(56, 189, 248, 0.15);
+  color: #38bdf8;
+  border: 1px solid rgba(56, 189, 248, 0.3);
+}
+
+@keyframes led-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(0.85); }
+}
+
+/* Animated Radar Scanner Widget */
+.hud-radar-disc {
+  position: relative;
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(14, 165, 233, 0.15) 0%, rgba(15, 23, 42, 0.85) 75%);
+  border: 1.5px solid rgba(56, 189, 248, 0.55);
+  box-shadow: 0 0 16px rgba(14, 165, 233, 0.35), inset 0 0 10px rgba(14, 165, 233, 0.2);
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.hud-radar-ring {
+  position: absolute;
+  inset: 7px;
+  border: 1px dashed rgba(56, 189, 248, 0.4);
+  border-radius: 50%;
+}
+
+.hud-radar-crosshair-x {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: rgba(56, 189, 248, 0.25);
+  transform: translateY(-50%);
+}
+
+.hud-radar-crosshair-y {
+  position: absolute;
+  left: 50%;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background: rgba(56, 189, 248, 0.25);
+  transform: translateX(-50%);
+}
+
+.hud-radar-sweep {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: conic-gradient(from 0deg, transparent 0deg, transparent 270deg, rgba(56, 189, 248, 0.15) 320deg, rgba(56, 189, 248, 0.75) 360deg);
+  animation: radar-sweep 2.4s linear infinite;
+}
+
+@keyframes radar-sweep {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.hud-radar-blip {
+  position: absolute;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #38bdf8;
+  box-shadow: 0 0 6px #38bdf8;
+  animation: blip-pulse 1.8s infinite ease-out;
+}
+
+.blip-1 { top: 28%; left: 62%; animation-delay: 0.3s; }
+.blip-2 { top: 68%; left: 35%; animation-delay: 1.1s; }
+.blip-3 { top: 40%; left: 24%; animation-delay: 1.7s; }
+
+@keyframes blip-pulse {
+  0% { transform: scale(0.6); opacity: 0.2; }
+  40% { transform: scale(1.4); opacity: 1; }
+  100% { transform: scale(0.8); opacity: 0.4; }
+}
+
+/* Unindexed Reticle Scope */
+.hud-reticle-ring {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1.5px dashed rgba(245, 158, 11, 0.6);
+  border-radius: 50%;
+  background: rgba(245, 158, 11, 0.08);
+  flex-shrink: 0;
+}
+
+.hud-reticle-circle {
+  width: 24px;
+  height: 24px;
+  border: 1.5px solid rgba(245, 158, 11, 0.8);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hud-reticle-core {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #f59e0b;
+  box-shadow: 0 0 8px #f59e0b;
+  animation: core-pulse 1.5s infinite ease-in-out;
+}
+
+@keyframes core-pulse {
+  0%, 100% { transform: scale(0.9); opacity: 0.8; }
+  50% { transform: scale(1.3); opacity: 1; box-shadow: 0 0 12px #f59e0b; }
+}
+
+/* KPI Telemetry Cards */
+.hud-kpi-card {
+  position: relative;
+  overflow: hidden;
+  border-top: 2px solid #0284c7;
+}
+
+.kpi-hud-icon {
+  width: 14px;
+  height: 14px;
+  margin-right: 5px;
+  vertical-align: -2px;
+  color: #0284c7;
+}
+
+/* Part Card Badges & Telemetry LEDs */
+.hud-optic-target {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 6px #10b981;
+  margin-right: 4px;
+  vertical-align: 0px;
+}
+
+.hud-led-glow {
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #f59e0b;
+  box-shadow: 0 0 8px #f59e0b;
+  margin-right: 4px;
+  vertical-align: 0px;
+  animation: led-pulse 1.8s infinite ease-in-out;
+}
+
+.hud-rating-led {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+  box-shadow: 0 0 6px currentColor;
+  margin-right: 4px;
+  vertical-align: 0px;
+}
+
+.hud-danger-dot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #ef4444;
+  box-shadow: 0 0 6px #ef4444;
+  margin-right: 8px;
+  flex-shrink: 0;
+  margin-top: 6px;
+}
+
+.hud-delta-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: 'JetBrains Mono', 'Fira Code', monospace, sans-serif;
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: #059669;
+}
+
+.hud-delta-led {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 6px #10b981;
+}
+
+/* Buy Rating Class Variants */
+.badge-rating {
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 0.72rem;
+  letter-spacing: 0.02em;
+  padding: 3px 8px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+}
+
+.rating-strong-buy {
+  background: rgba(16, 185, 129, 0.12);
+  color: #059669;
+  border: 1px solid rgba(16, 185, 129, 0.35);
+}
+
+.rating-good-deal {
+  background: rgba(2, 132, 199, 0.12);
+  color: #0284c7;
+  border: 1px solid rgba(2, 132, 199, 0.35);
+}
+
+.rating-benchmark {
+  background: rgba(100, 116, 139, 0.12);
+  color: #475569;
+  border: 1px solid rgba(100, 116, 139, 0.35);
+}
+
+.rating-elevated {
+  background: rgba(239, 68, 68, 0.12);
+  color: #dc2626;
+  border: 1px solid rgba(239, 68, 68, 0.35);
+}
+
+.rating-fair {
+  background: rgba(245, 158, 11, 0.12);
+  color: #d97706;
+  border: 1px solid rgba(245, 158, 11, 0.35);
+}
+
+/* Precision SVG Icons in Controls & Buttons */
+.hud-ctrl-svg {
+  width: 14px;
+  height: 14px;
+  vertical-align: -2px;
+  margin-right: 5px;
+}
+
+.sec-hud-icon {
+  width: 16px;
+  height: 16px;
+  margin-right: 6px;
+  vertical-align: -3px;
+  color: #0284c7;
+}
+
+.sec-hud-icon.icon-danger {
+  color: #ef4444;
+}
+
+.vin-chip-svg {
+  width: 15px;
+  height: 15px;
+  vertical-align: -2px;
+  margin-right: 5px;
+  color: currentColor;
+}
+
+.icon-sparkline {
+  color: #0284c7;
+}
+
+.star-svg {
+  display: block;
+}
+
+.btn-inner-flex {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.icon-inline {
+  width: 15px;
+  height: 15px;
+  vertical-align: -2px;
+}

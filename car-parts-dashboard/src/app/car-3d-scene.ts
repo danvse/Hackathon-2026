@@ -24,7 +24,7 @@ export const COMPONENT_KNOWLEDGE_BASE: Record<string, ComponentInfo> = {
     name: 'Front & Rear Brake Rotors',
     category: 'Brake Rotors',
     system: 'Braking & Safety',
-    icon: '🛑',
+    icon: 'BRK-ROT',
     badge: 'High-Wear Friction Element',
     tagline: 'Precision cast-iron disc providing the friction surface for stopping power.',
     description:
@@ -47,7 +47,7 @@ export const COMPONENT_KNOWLEDGE_BASE: Record<string, ComponentInfo> = {
     name: 'Ceramic / Semi-Metallic Brake Pads',
     category: 'Brake Pads',
     system: 'Braking & Safety',
-    icon: '🛑',
+    icon: 'BRK-PAD',
     badge: 'Primary Wear Contact',
     tagline: 'Friction lining pressed against the rotor to safely decelerate the car.',
     description:
@@ -70,7 +70,7 @@ export const COMPONENT_KNOWLEDGE_BASE: Record<string, ComponentInfo> = {
     name: 'Internal Combustion Engine Assembly',
     category: 'Spark Plugs',
     system: 'Powertrain & Combustion',
-    icon: '⚙️',
+    icon: 'ENG-BLK',
     badge: 'Heart of the Vehicle',
     tagline: 'Houses the pistons, crankshaft, cylinders, and combustion chambers.',
     description:
@@ -93,7 +93,7 @@ export const COMPONENT_KNOWLEDGE_BASE: Record<string, ComponentInfo> = {
     name: '12V AGM / Lead-Acid Starter Battery',
     category: 'Battery',
     system: 'Electrical & Starting',
-    icon: '🔋',
+    icon: 'BAT-12V',
     badge: 'Energy Storage & Start/Stop',
     tagline: 'Supplies high cranking current to starter motor and stabilizes vehicle voltage.',
     description:
@@ -116,7 +116,7 @@ export const COMPONENT_KNOWLEDGE_BASE: Record<string, ComponentInfo> = {
     name: 'Electrical Alternator & Internal Regulator',
     category: 'Alternator',
     system: 'Electrical & Starting',
-    icon: '⚡',
+    icon: 'ALT-GEN',
     badge: 'Onboard Generator',
     tagline: 'Converts engine mechanical energy into AC/DC electricity while driving.',
     description:
@@ -139,7 +139,7 @@ export const COMPONENT_KNOWLEDGE_BASE: Record<string, ComponentInfo> = {
     name: 'Engine Oil Filter Cartridge & Housing',
     category: 'Oil Filter',
     system: 'Filtration & Lubrication',
-    icon: '🛢️',
+    icon: 'FLT-OIL',
     badge: 'Routine Service Wear',
     tagline: 'Filters microscopic carbon and metal shavings out of motor oil.',
     description:
@@ -162,7 +162,7 @@ export const COMPONENT_KNOWLEDGE_BASE: Record<string, ComponentInfo> = {
     name: 'Engine Intake Air Filter',
     category: 'Air Filter',
     system: 'Filtration & Airflow',
-    icon: '💨',
+    icon: 'FLT-AIR',
     badge: 'Engine Breathing Guard',
     tagline: 'Prevents road dust, sand, and debris from being sucked into the intake.',
     description:
@@ -185,7 +185,7 @@ export const COMPONENT_KNOWLEDGE_BASE: Record<string, ComponentInfo> = {
     name: 'HEPA / Activated Carbon Cabin Filter',
     category: 'Cabin Air Filter',
     system: 'Interior HVAC & Comfort',
-    icon: '🍃',
+    icon: 'FLT-CAB',
     badge: 'Passenger Cabin Air Quality',
     tagline: 'Cleans air entering through A/C and heating vents before you breathe it.',
     description:
@@ -208,7 +208,7 @@ export const COMPONENT_KNOWLEDGE_BASE: Record<string, ComponentInfo> = {
     name: 'Iridium / Platinum Spark Plugs',
     category: 'Spark Plugs',
     system: 'Powertrain & Combustion',
-    icon: '⚡',
+    icon: 'SPK-PLG',
     badge: 'Ignition Flame Front',
     tagline: 'Delivers high-voltage electric arc to ignite compressed fuel-air mixture.',
     description:
@@ -231,7 +231,7 @@ export const COMPONENT_KNOWLEDGE_BASE: Record<string, ComponentInfo> = {
     name: 'Front Struts & Rear Shock Absorbers',
     category: 'Shock Absorbers',
     system: 'Suspension & Handling',
-    icon: '🏎️',
+    icon: 'SUS-SHK',
     badge: 'Chassis Stability & Comfort',
     tagline: 'Dampens suspension oscillation to keep tire contact firmly on the pavement.',
     description:
@@ -254,7 +254,7 @@ export const COMPONENT_KNOWLEDGE_BASE: Record<string, ComponentInfo> = {
     name: 'Multi-Ribbed EPDM Serpentine Accessory Belt',
     category: 'Serpentine Belt',
     system: 'Powertrain & Accessories',
-    icon: '🌀',
+    icon: 'BLT-SRP',
     badge: 'Mechanical Drive Loop',
     tagline: 'Spins the alternator, water pump, power steering, and A/C compressor.',
     description:

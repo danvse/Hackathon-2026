@@ -470,7 +470,7 @@ export class App implements OnInit, OnDestroy {
   viewPricesForComponent(category: string): void {
     this.setActiveTab('scanner');
     this.selectedCategory.set(category);
-    this.copyToast.set(`🚀 Filtered catalog for ${category}!`);
+    this.copyToast.set(`⌖ Subsystem locked: Filtered catalog for ${category}`);
     setTimeout(() => this.copyToast.set(null), 3500);
   }
 
@@ -498,6 +498,15 @@ export class App implements OnInit, OnDestroy {
     if (s.includes('advance')) return 'store-advance';
     if (s.includes('direct') || s.includes('oem') || s.includes('parts live')) return 'store-oem';
     return 'store-default';
+  }
+
+  getRatingClass(rating?: string): string {
+    const r = (rating || '').toLowerCase();
+    if (r.includes('strong buy') || r.includes('low')) return 'rating-strong-buy';
+    if (r.includes('good deal')) return 'rating-good-deal';
+    if (r.includes('elevated') || r.includes('high')) return 'rating-elevated';
+    if (r.includes('benchmark')) return 'rating-benchmark';
+    return 'rating-fair';
   }
 
   // Copy OEM Part number to clipboard
@@ -783,7 +792,7 @@ export class App implements OnInit, OnDestroy {
           }
           setTimeout(() => {
             this.isHunting.set(false);
-            this.copyToast.set(`🚀 Found ${resp.items?.length || 0} listings across RockAuto, AutoZone & FCP Euro!`);
+            this.copyToast.set(`✓ Telemetry indexed ${resp.items?.length || 0} listings across RockAuto, AutoZone & FCP Euro!`);
             setTimeout(() => this.copyToast.set(null), 3500);
           }, 700);
         },
@@ -1003,7 +1012,7 @@ export class App implements OnInit, OnDestroy {
 
     setTimeout(() => {
       this.isHunting.set(false);
-      this.copyToast.set(`🚀 Found ${generatedParts.length} verified listings across RockAuto, AutoZone & OEM Direct!`);
+      this.copyToast.set(`✓ Telemetry indexed ${generatedParts.length} verified listings across RockAuto, AutoZone & OEM Direct!`);
       setTimeout(() => this.copyToast.set(null), 3500);
     }, 600);
   }
@@ -1057,7 +1066,7 @@ export class App implements OnInit, OnDestroy {
       this.copyToast.set('Removed from Watchlist');
     } else {
       updated = [...current, sku];
-      this.copyToast.set('⭐ Added to Watchlist!');
+      this.copyToast.set('⌖ Part saved to Watchlist telemetry');
     }
 
     this.watchlistSkus.set(updated);
@@ -1101,7 +1110,7 @@ export class App implements OnInit, OnDestroy {
 
   saveTargetAlert(): void {
     this.targetAlertSet.set(true);
-    this.copyToast.set(`🔔 Price drop alert set for $${this.targetAlertPrice()?.toFixed(2)} USD!`);
+    this.copyToast.set(`⌖ Price drop threshold armed at $${this.targetAlertPrice()?.toFixed(2)} USD!`);
     setTimeout(() => this.copyToast.set(null), 3000);
   }
 
