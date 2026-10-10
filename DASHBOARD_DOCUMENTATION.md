@@ -330,3 +330,20 @@ To keep the dataset constantly fresh in production:
 2. **Reverse Proxy & SSL**: Nginx with Let's Encrypt SSL and Cloudflare CDN caching for static image assets.
 3. **Database Migration**:
    * Migrate CSV storage to **PostgreSQL** or **DuckDB** once volume exceeds 50,000 parts.
+
+---
+
+## 8. Real-Time Automation & Vehicle Intelligence Enhancements
+
+### 8.1 Guaranteed Fitment VIN Decoder
+* **NHTSA VPIC API Integration**: Translates 17-character VIN strings into exact chassis, trim, engine configuration (displacement, cylinder count), and drivetrain specs.
+* **Fitment Verification Guardrails**: Automatically filters catalog parts to ensure compatibility and highlights verified fitment badges.
+
+### 8.2 Historical Price Tracking & Watchlist ("Best Time to Buy")
+* **Time-Series Tracking**: Maintains temporal snapshots across 30-day, 90-day, and 1-year intervals.
+* **All-Time Low Flags**: Automatically highlights parts trading within 1.5% of their recorded 1-year low.
+* **User Watchlist**: Users bookmark specific parts (`localStorage` persistence) and configure target price drop triggers.
+
+### 8.3 On-Demand Price Hunter & Auto-Compiler
+* **Auto-Trigger Mechanism**: When a decoded VIN or user query encounters zero catalog matches, the system triggers the live web crawler via `POST /api/hunt-prices`.
+* **Dynamic Catalog Ingestion**: FCP Euro and Tier-1 distributor listings are queried in real time, classified into OEM vs. Aftermarket tiers, enriched with historical price trajectories, and seamlessly appended to the catalog.

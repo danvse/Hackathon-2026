@@ -273,6 +273,40 @@ def run_collection(models, years, output_csv, max_items_per_cat=8, delay_range=(
     print(f"  Saved to file: {os.path.abspath(output_csv)}")
     print("=" * 70)
 
+    # Automatic JSON Synchronization for Web Dashboard
+    try:
+        import json
+        from enrich_historical_data import generate_history_for_part
+        json_targets = [
+            "mercedes_parts_data.json",
+            os.path.join("car-parts-dashboard", "public", "parts_data.json")
+        ]
+        
+        # Read back complete CSV and enrich
+        all_records = []
+        with open(output_csv, "r", encoding="utf-8") as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                try:
+                    row["price_usd"] = float(row["price_usd"])
+                except Exception:
+                    row["price_usd"] = 0.0
+                try:
+                    row["year"] = int(row["year"])
+                except Exception:
+                    pass
+                row["tier"] = "OEM (Genuine)" if "genuine" in row.get("brand", "").lower() else "Aftermarket"
+                row = generate_history_for_part(row)
+                all_records.append(row)
+                
+        for jt in json_targets:
+            os.makedirs(os.path.dirname(jt) or ".", exist_ok=True)
+            with open(jt, "w", encoding="utf-8") as f:
+                json.dump(all_records, f, indent=2)
+            print(f"  [✓] Auto-synced dashboard JSON: {os.path.abspath(jt)}")
+    except Exception as e:
+        print(f"  [!] Note: Dashboard JSON sync error: {e}")
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Collect Mercedes-Benz parts price data safely into CSV.")

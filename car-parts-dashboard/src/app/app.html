@@ -14,11 +14,22 @@
         </svg>
       </div>
       <div>
-        <h1 class="brand-title">Mercedes-Benz Parts Pulse</h1>
-        <p class="brand-subtitle">OEM vs Aftermarket Price Intelligence & Trend Analytics</p>
+        <h1 class="brand-title">AutoParts Pulse</h1>
+        <p class="brand-subtitle">Universal Cross-Retailer Price Intelligence, VIN Fitment & Multi-Store Checker</p>
       </div>
     </div>
     <div class="nav-actions">
+      <!-- Watchlist Toggle Button -->
+      <button
+        class="btn btn-watchlist"
+        [class.btn-watchlist-active]="showWatchlistOnly()"
+        (click)="showWatchlistOnly.set(!showWatchlistOnly())"
+      >
+        <span class="star-icon">★</span>
+        Watchlist ({{ watchlistSkus().length }})
+      </button>
+
+      <!-- Export CSV Button -->
       <button class="btn btn-secondary" (click)="exportCsv()" [disabled]="!filteredParts().length">
         <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
@@ -33,7 +44,7 @@
   <!-- LOADING & ERROR STATES -->
   <div *ngIf="loading()" class="state-card">
     <div class="spinner"></div>
-    <p>Loading parts catalog and market intelligence...</p>
+    <p>Loading multi-retailer catalog and market intelligence...</p>
   </div>
 
   <div *ngIf="error()" class="state-card error-card">
@@ -41,9 +52,136 @@
   </div>
 
   <main *ngIf="!loading() && !error()">
-    <!-- FILTER BAR -->
-    <section class="filter-panel">
+    <!-- UNIVERSAL VIN DECODER & GUARANTEED FITMENT SECTION -->
+    <section class="vin-section">
+      <div class="vin-card">
+        <div class="vin-header">
+          <div class="vin-title-group">
+            <span class="badge badge-vin">FEATURE: UNIVERSAL VIN DECODER</span>
+            <h2>Guaranteed Fitment & Cross-Store Checker</h2>
+          </div>
+          <p class="vin-sub">
+            Enter ANY 17-character VIN (Toyota, Honda, Ford, BMW, Mercedes-Benz, Chevrolet, etc.) to decode exact specifications and compare prices across RockAuto, AutoZone, FCP Euro, and OEM Dealerships.
+          </p>
+        </div>
+
+        <div class="vin-input-row">
+          <div class="vin-input-wrapper">
+            <input
+              type="text"
+              maxlength="17"
+              placeholder="e.g. 4T1BF1FKXLU000001 (Any 17-character VIN)"
+              [ngModel]="vinInput()"
+              (ngModelChange)="vinInput.set($event)"
+              (keyup.enter)="decodeVin()"
+              class="vin-input"
+            />
+            <button
+              class="btn btn-primary btn-decode"
+              (click)="decodeVin()"
+              [disabled]="vinLoading()"
+            >
+              <span *ngIf="!vinLoading()">🔍 Decode & Check Prices</span>
+              <span *ngIf="vinLoading()">Decoding...</span>
+            </button>
+          </div>
+
+          <!-- Multi-Make Test VIN Chips -->
+          <div class="vin-samples">
+            <span class="samples-label">Test Real Vehicle VINs:</span>
+            <button
+              type="button"
+              class="chip-btn chip-trigger"
+              (click)="applySampleVin('4T1BF1FKXLU000001')"
+              title="2020 Toyota Camry (Live Multi-Retailer Hunt)"
+            >
+              🚗 2020 Toyota Camry
+            </button>
+            <button
+              type="button"
+              class="chip-btn"
+              (click)="applySampleVin('19XFC2F59ME000001')"
+            >
+              🚙 2021 Honda Civic
+            </button>
+            <button
+              type="button"
+              class="chip-btn"
+              (click)="applySampleVin('55SWF4KB9JU268482')"
+            >
+              🚘 2018 Mercedes C300
+            </button>
+            <button
+              type="button"
+              class="chip-btn"
+              (click)="applySampleVin('WBA5R1C58M8B00001')"
+            >
+              🏎️ 2021 BMW 330i
+            </button>
+            <button
+              type="button"
+              class="chip-btn"
+              (click)="applySampleVin('1FTFW1E84LFA00001')"
+            >
+              🛻 2020 Ford F-150
+            </button>
+          </div>
+        </div>
+
+        <!-- VIN Error Alert -->
+        <div *ngIf="vinError()" class="vin-error-banner">
+          ⚠️ {{ vinError() }}
+        </div>
+
+        <!-- Decoded Vehicle Verified Fitment Card -->
+        <div *ngIf="decodedVehicle() as v" class="decoded-result-box">
+          <div class="decoded-left">
+            <div class="fitment-verified-badge">
+              <span class="shield-icon">🛡️</span>
+              <strong>GUARANTEED FITMENT VERIFIED</strong>
+            </div>
+            <h3 class="decoded-name">{{ v.year }} {{ v.make }} {{ v.model }} ({{ v.trim }})</h3>
+            <div class="decoded-specs">
+              <span class="spec-tag">Engine: <strong>{{ v.engine }}</strong></span>
+              <span class="spec-tag">Drivetrain: <strong>{{ v.driveType }}</strong></span>
+              <span class="spec-tag">Body: <strong>{{ v.bodyClass }}</strong></span>
+              <span class="spec-tag">VIN: <code>{{ v.vin }}</code></span>
+            </div>
+          </div>
+          <div class="decoded-right">
+            <button class="btn btn-outline-sm" (click)="clearVin()">
+              Clear Fitment Filter
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- LIVE MULTI-RETAILER PRICE HUNTER PROGRESS BANNER -->
+    <section *ngIf="isHunting()" class="hunter-active-banner">
+      <div class="hunter-content">
+        <div class="hunter-spinner"></div>
+        <div>
+          <h4>🤖 Live Multi-Retailer Price Hunter Running...</h4>
+          <p class="hunter-step-text">{{ huntingStep() }}</p>
+        </div>
+      </div>
+      <div class="progress-bar-container">
+        <div class="progress-bar" [style.width.%]="huntingProgress()"></div>
+      </div>
+    </section>
+
+    <!-- UNIVERSAL FILTER BAR -->
+    <section class="filter-panel" *ngIf="!showWatchlistOnly()">
       <div class="filter-grid">
+        <!-- Vehicle Make Selector -->
+        <div class="filter-item">
+          <label>Vehicle Make</label>
+          <select [ngModel]="selectedMake()" (ngModelChange)="selectedMake.set($event); selectedModel.set('All')">
+            <option *ngFor="let m of makes()" [value]="m">{{ m }}</option>
+          </select>
+        </div>
+
         <!-- Model Selector -->
         <div class="filter-item">
           <label>Vehicle Model</label>
@@ -68,15 +206,15 @@
           </select>
         </div>
 
-        <!-- Brand Selector -->
+        <!-- Retailer Store Selector -->
         <div class="filter-item">
-          <label>Brand Filter</label>
-          <select [ngModel]="selectedBrand()" (ngModelChange)="selectedBrand.set($event)">
-            <option *ngFor="let b of availableBrands()" [value]="b">{{ b }}</option>
+          <label>Retailer Store</label>
+          <select [ngModel]="selectedRetailer()" (ngModelChange)="selectedRetailer.set($event)">
+            <option *ngFor="let r of retailers()" [value]="r">{{ r }}</option>
           </select>
         </div>
 
-        <!-- Tier Selector -->
+        <!-- Part Tier -->
         <div class="filter-item">
           <label>Part Tier</label>
           <select [ngModel]="selectedTier()" (ngModelChange)="selectedTier.set($event)">
@@ -91,7 +229,7 @@
           <label>Search Keyword or Part #</label>
           <input
             type="text"
-            placeholder="e.g. Brembo, 0004209100, Ceramic..."
+            placeholder="e.g. Akebono, Denso, Duralast, Brembo..."
             [ngModel]="searchQuery()"
             (ngModelChange)="searchQuery.set($event)"
           />
@@ -99,24 +237,35 @@
       </div>
     </section>
 
+    <!-- WATCHLIST ACTIVE HEADER -->
+    <section *ngIf="showWatchlistOnly()" class="watchlist-banner">
+      <div class="watchlist-banner-content">
+        <h2>⭐ Tracked Watchlist & Price Alerts</h2>
+        <p>Showing {{ filteredParts().length }} bookmarked parts. Watchlist alerts monitor price drops and 1-year all-time lows across stores.</p>
+      </div>
+      <button class="btn btn-secondary" (click)="showWatchlistOnly.set(false)">
+        View Full Catalog
+      </button>
+    </section>
+
     <!-- METRICS KPI ROW -->
     <section class="kpi-grid">
       <!-- OEM Benchmark -->
       <div class="kpi-card">
-        <span class="kpi-label">⭐ OEM Genuine Price</span>
+        <span class="kpi-label">⭐ Factory OEM MSRP</span>
         <div class="kpi-value oem-text">
           {{ kpiMetrics().oemPrice !== null ? ('$' + kpiMetrics().oemPrice?.toFixed(2)) : 'N/A' }}
         </div>
-        <span class="kpi-caption">Factory Mercedes-Benz specification</span>
+        <span class="kpi-caption">Official dealership factory benchmark</span>
       </div>
 
-      <!-- Best Aftermarket -->
+      <!-- Best Retailer Store -->
       <div class="kpi-card">
-        <span class="kpi-label">🔧 Lowest Aftermarket</span>
+        <span class="kpi-label">🛒 Lowest Store Price</span>
         <div class="kpi-value aft-text">
           {{ kpiMetrics().aftermarketPrice !== null ? ('$' + kpiMetrics().aftermarketPrice?.toFixed(2)) : 'N/A' }}
         </div>
-        <span class="kpi-caption">Certified Tier-1 replacement equivalent</span>
+        <span class="kpi-caption">{{ kpiMetrics().bestStore ? ('Best Store: ' + kpiMetrics().bestStore) : 'Lowest cross-store price' }}</span>
       </div>
 
       <!-- Max Savings -->
@@ -131,51 +280,72 @@
             $0.00
           </ng-container>
         </div>
-        <span class="kpi-caption">Savings choosing aftermarket over OEM</span>
+        <span class="kpi-caption">Saved by buying aftermarket vs dealer</span>
       </div>
 
-      <!-- Inventory Count -->
+      <!-- Stores In Stock -->
       <div class="kpi-card">
-        <span class="kpi-label">📦 Available In Stock</span>
-        <div class="kpi-value">{{ kpiMetrics().totalCount }}</div>
-        <span class="kpi-caption">Matching parts found for this fitment</span>
+        <span class="kpi-label">🏬 Retailers Compared</span>
+        <div class="kpi-value">{{ kpiMetrics().storeCount }} Stores</div>
+        <span class="kpi-caption">{{ kpiMetrics().totalCount }} in-stock listings compared</span>
       </div>
     </section>
 
     <!-- CHARTS ANALYTICS ROW -->
-    <section class="charts-row">
+    <section class="charts-row" *ngIf="!showWatchlistOnly() && filteredParts().length">
       <!-- Cross-Platform Trend Line Chart -->
       <div class="chart-card">
         <div class="chart-header">
-          <h3>📈 Price Trends Across Vehicle Platforms</h3>
+          <h3>📈 Cross-Vehicle Price Trends</h3>
           <span class="badge badge-neutral">{{ selectedCategory() }}</span>
         </div>
-        <p class="chart-sub">Compares OEM Genuine baseline vs. Aftermarket average pricing across Mercedes platforms.</p>
+        <p class="chart-sub">Compares OEM Genuine baseline vs. Multi-Store aftermarket pricing across vehicles.</p>
         <div class="chart-canvas-container">
           <canvas #trendCanvas></canvas>
         </div>
       </div>
 
-      <!-- Brand Price Spread Horizontal Bar Chart -->
+      <!-- Brand / Retailer Price Spread -->
       <div class="chart-card">
         <div class="chart-header">
-          <h3>📊 Brand Price Spread</h3>
-          <span class="badge badge-neutral">{{ selectedModel() }}</span>
+          <h3>📊 Cross-Store Price Spread</h3>
+          <span class="badge badge-neutral">{{ selectedMake() !== 'All' ? selectedMake() : '' }} {{ selectedModel() !== 'All' ? selectedModel() : '' }}</span>
         </div>
-        <p class="chart-sub">Real-time market price distribution by manufacturer for {{ selectedCategory() }}.</p>
+        <p class="chart-sub">Real-time market price comparison by brand and store for {{ selectedCategory() }}.</p>
         <div class="chart-canvas-container">
           <canvas #brandCanvas></canvas>
         </div>
       </div>
     </section>
 
+    <!-- MISSING PART / ON-DEMAND AUTO-HUNTER TRIGGER CARD -->
+    <section *ngIf="!filteredParts().length && !isHunting()" class="no-parts-hunter-trigger">
+      <div class="hunter-trigger-card">
+        <div class="hunter-icon-box">⚡</div>
+        <div class="hunter-text-box">
+          <h3>No Local Records for {{ selectedYear() }} {{ selectedMake() !== 'All' ? selectedMake() : '' }} {{ selectedModel() !== 'All' ? selectedModel() : 'Vehicle' }} ({{ selectedCategory() }})</h3>
+          <p>
+            This vehicle or category is not yet indexed in local storage. Click below to trigger the automated Multi-Retailer Price Hunter to search RockAuto, AutoZone, FCP Euro, and OEM Dealerships in real time!
+          </p>
+        </div>
+        <div class="hunter-action-box">
+          <button class="btn btn-primary btn-lg" (click)="triggerPriceHunter()">
+            🤖 Hunt Prices Across Stores
+          </button>
+        </div>
+      </div>
+    </section>
+
     <!-- LISTINGS COMPARISON TABLE -->
-    <section class="listings-section">
+    <section class="listings-section" *ngIf="filteredParts().length">
       <div class="listings-header">
         <div>
-          <h2>Available Parts & Direct Retailer Links</h2>
-          <p class="listings-sub">
-            Showing {{ filteredParts().length }} options for {{ selectedYear() }} Mercedes-Benz {{ selectedModel() }} ({{ selectedCategory() }})
+          <h2>Available Parts & Cross-Store Price Intelligence</h2>
+          <p class="listings-sub" *ngIf="!showWatchlistOnly()">
+            Showing {{ filteredParts().length }} verified options for {{ selectedYear() }} {{ selectedMake() !== 'All' ? selectedMake() : '' }} {{ selectedModel() !== 'All' ? selectedModel() : '' }} ({{ selectedCategory() }}) across multiple retailers
+          </p>
+          <p class="listings-sub" *ngIf="showWatchlistOnly()">
+            Showing {{ filteredParts().length }} tracked parts from your personal Watchlist.
           </p>
         </div>
         <div class="sort-controls">
@@ -188,16 +358,20 @@
         </div>
       </div>
 
-      <!-- No items found -->
-      <div *ngIf="!filteredParts().length" class="empty-state">
-        <p>No parts match the selected filters. Try clearing your search keyword or selecting "All Brands".</p>
-      </div>
-
-      <!-- Part Cards List -->
-      <div class="parts-list" *ngIf="filteredParts().length">
+      <!-- Part Cards List (Clean, Tight 4-Column Layout) -->
+      <div class="parts-list">
         <article class="part-card" *ngFor="let item of filteredParts()">
-          <!-- Thumbnail -->
+          <!-- Thumbnail with Bookmark Icon -->
           <div class="part-image-box">
+            <button
+              type="button"
+              class="star-toggle-btn"
+              [class.star-active]="isWatched(item.sku)"
+              (click)="toggleWatchlist(item.sku)"
+              title="Toggle Watchlist / Price Drop Alert"
+            >
+              ★
+            </button>
             <img
               *ngIf="item.image_url"
               [src]="item.image_url"
@@ -211,22 +385,46 @@
           <!-- Part Details -->
           <div class="part-info">
             <div class="part-badges">
+              <!-- Retailer Store Badge -->
+              <span class="badge badge-store" [ngClass]="getStoreClass(item.source)">
+                🏬 {{ item.source }}
+              </span>
+
+              <!-- Tier Badge -->
               <span
                 class="badge"
                 [ngClass]="item.tier === 'OEM (Genuine)' ? 'badge-oem' : 'badge-aftermarket'"
               >
                 {{ item.tier }}
               </span>
+
+              <!-- Brand Badge -->
               <span class="badge badge-brand">{{ item.brand }}</span>
-              <span class="badge badge-source">{{ item.source }}</span>
+
+              <!-- Lowest Price Store Badge -->
+              <span *ngIf="isLowestPrice(item)" class="badge badge-lowest-price">
+                🏆 Best Price Store
+              </span>
+
+              <!-- All-Time Low Badge -->
+              <span *ngIf="item.is_all_time_low" class="badge badge-atl">
+                🔥 All-Time Low
+              </span>
+
+              <!-- Buy Rating Badge -->
+              <span *ngIf="item.buy_rating" class="badge badge-rating">
+                {{ item.buy_rating }}
+              </span>
             </div>
 
             <h3 class="part-title">{{ item.part_name }}</h3>
 
             <div class="part-meta">
+              <span>Make: <strong>{{ item.make }}</strong></span>
+              <span>Model: <strong>{{ item.model }}</strong></span>
               <span>SKU: <code>{{ item.sku }}</code></span>
               <span *ngIf="item.part_number && item.part_number !== 'N/A'">
-                OEM Part #: <code>{{ item.part_number }}</code>
+                Part #: <code>{{ item.part_number }}</code>
                 <button
                   type="button"
                   class="btn-icon"
@@ -235,6 +433,20 @@
                 >
                   📋
                 </button>
+              </span>
+            </div>
+
+            <!-- Price History Quick Action -->
+            <div class="part-history-teaser">
+              <button
+                type="button"
+                class="btn-history-link"
+                (click)="openPriceHistoryModal(item)"
+              >
+                📈 View 1-Year Price History & Trends ↗
+              </button>
+              <span *ngIf="item.price_change_90d_pct as chg" class="hist-stat" [class.hist-drop]="chg < 0">
+                {{ chg > 0 ? ('+' + chg + '%') : (chg + '%') }} in last 90 days
               </span>
             </div>
           </div>
@@ -259,11 +471,110 @@
               rel="noopener noreferrer"
               class="btn btn-primary"
             >
-              View on Retailer ↗
+              Buy on {{ item.source }} ↗
             </a>
           </div>
         </article>
       </div>
     </section>
   </main>
+
+  <!-- HISTORICAL PRICE MODAL -->
+  <div class="modal-backdrop" *ngIf="selectedPartForHistory() as part" (click)="closePriceHistoryModal()">
+    <div class="modal-container" (click)="$event.stopPropagation()">
+      <div class="modal-header">
+        <div>
+          <span class="badge" [ngClass]="part.tier === 'OEM (Genuine)' ? 'badge-oem' : 'badge-aftermarket'">
+            {{ part.tier }}
+          </span>
+          <span class="badge badge-store" [ngClass]="getStoreClass(part.source)" style="margin-left: 6px;">
+            {{ part.source }}
+          </span>
+          <h2 class="modal-title">{{ part.part_name }}</h2>
+          <p class="modal-sub">Brand: {{ part.brand }} | Store: {{ part.source }} | SKU: {{ part.sku }}</p>
+        </div>
+        <button class="modal-close-btn" (click)="closePriceHistoryModal()">✕</button>
+      </div>
+
+      <div class="modal-body">
+        <!-- Quick Stats Grid -->
+        <div class="modal-stats-grid">
+          <div class="mstat-card">
+            <span class="mstat-label">Current Price</span>
+            <div class="mstat-val">${{ part.price_usd.toFixed(2) }}</div>
+          </div>
+
+          <div class="mstat-card mstat-highlight">
+            <span class="mstat-label">🔥 1-Year Low</span>
+            <div class="mstat-val">${{ part.all_time_low?.toFixed(2) }}</div>
+          </div>
+
+          <div class="mstat-card">
+            <span class="mstat-label">1-Year High</span>
+            <div class="mstat-val">${{ part.all_time_high?.toFixed(2) }}</div>
+          </div>
+
+          <div class="mstat-card">
+            <span class="mstat-label">Best Time to Buy</span>
+            <div class="mstat-val rating-text">{{ part.buy_rating || 'Good Deal' }}</div>
+          </div>
+        </div>
+
+        <!-- Chart Timeframe Controls -->
+        <div class="timeframe-row">
+          <span class="timeframe-label">History Range:</span>
+          <div class="btn-group">
+            <button
+              class="tf-btn"
+              [class.tf-active]="historyTimeframe() === '30d'"
+              (click)="setHistoryTimeframe('30d')"
+            >
+              30 Days
+            </button>
+            <button
+              class="tf-btn"
+              [class.tf-active]="historyTimeframe() === '90d'"
+              (click)="setHistoryTimeframe('90d')"
+            >
+              90 Days
+            </button>
+            <button
+              class="tf-btn"
+              [class.tf-active]="historyTimeframe() === '1yr'"
+              (click)="setHistoryTimeframe('1yr')"
+            >
+              1 Year
+            </button>
+          </div>
+        </div>
+
+        <!-- Historical Canvas -->
+        <div class="history-chart-wrapper">
+          <canvas #historyCanvas></canvas>
+        </div>
+
+        <!-- Price Alert Trigger -->
+        <div class="modal-alert-box">
+          <div class="alert-info">
+            <h4>🔔 Set Price Drop Notification</h4>
+            <p>We'll notify you during automated syncs if {{ part.brand }} at {{ part.source }} drops below your target price.</p>
+          </div>
+          <div class="alert-action-row">
+            <div class="target-input-wrap">
+              <span>$</span>
+              <input
+                type="number"
+                step="0.01"
+                [ngModel]="targetAlertPrice()"
+                (ngModelChange)="targetAlertPrice.set($event)"
+              />
+            </div>
+            <button class="btn btn-primary" (click)="saveTargetAlert()">
+              Set Price Alert
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
