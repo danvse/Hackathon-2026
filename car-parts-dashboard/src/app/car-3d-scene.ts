@@ -312,6 +312,14 @@ export class Car3DScene {
   private targetLookAt: THREE.Vector3 = new THREE.Vector3(0, 0.4, 0);
   private defaultCameraPos = new THREE.Vector3(3.6, 1.8, 3.8);
 
+  // Studio Theme Elements
+  private isLightMode = false;
+  private gridHelper!: THREE.GridHelper;
+  private pedestalMat!: THREE.MeshStandardMaterial;
+  private ringMat!: THREE.MeshBasicMaterial;
+  private ambientLight!: THREE.AmbientLight;
+  private keyLight!: THREE.DirectionalLight;
+
   // Highlighting Materials
   private hoverMaterial = new THREE.MeshStandardMaterial({
     color: 0x00e5ff,
@@ -391,16 +399,16 @@ export class Car3DScene {
 
   private setupLighting(): void {
     // Ambient soft fill
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
-    this.scene.add(ambientLight);
+    this.ambientLight = new THREE.AmbientLight(0xffffff, 0.7);
+    this.scene.add(this.ambientLight);
 
     // Main Key Light
-    const keyLight = new THREE.DirectionalLight(0xe8f0fe, 1.8);
-    keyLight.position.set(5, 7, 5);
-    keyLight.castShadow = true;
-    keyLight.shadow.mapSize.width = 1024;
-    keyLight.shadow.mapSize.height = 1024;
-    this.scene.add(keyLight);
+    this.keyLight = new THREE.DirectionalLight(0xe8f0fe, 1.8);
+    this.keyLight.position.set(5, 7, 5);
+    this.keyLight.castShadow = true;
+    this.keyLight.shadow.mapSize.width = 1024;
+    this.keyLight.shadow.mapSize.height = 1024;
+    this.scene.add(this.keyLight);
 
     // Cool Rim / Edge Backlight
     const rimLight = new THREE.DirectionalLight(0x00c8ff, 1.2);
@@ -420,26 +428,26 @@ export class Car3DScene {
 
   private setupEnvironment(): void {
     // Cyber Grid Floor
-    const grid = new THREE.GridHelper(20, 40, 0x00f0ff, 0x1f293d);
-    grid.position.y = -0.01;
-    this.scene.add(grid);
+    this.gridHelper = new THREE.GridHelper(20, 40, 0x00f0ff, 0x1f293d);
+    this.gridHelper.position.y = -0.01;
+    this.scene.add(this.gridHelper);
 
-    // Dark Reflective Pedestal
+    // Reflective Pedestal
     const pedestalGeo = new THREE.CylinderGeometry(3.5, 3.7, 0.1, 48);
-    const pedestalMat = new THREE.MeshStandardMaterial({
+    this.pedestalMat = new THREE.MeshStandardMaterial({
       color: 0x111622,
       roughness: 0.4,
       metalness: 0.8,
     });
-    const pedestal = new THREE.Mesh(pedestalGeo, pedestalMat);
+    const pedestal = new THREE.Mesh(pedestalGeo, this.pedestalMat);
     pedestal.position.y = -0.05;
     pedestal.receiveShadow = true;
     this.scene.add(pedestal);
 
     // Glowing Neon Ring around turntable
     const ringGeo = new THREE.TorusGeometry(3.6, 0.02, 16, 64);
-    const ringMat = new THREE.MeshBasicMaterial({ color: 0x00e5ff });
-    const ring = new THREE.Mesh(ringGeo, ringMat);
+    this.ringMat = new THREE.MeshBasicMaterial({ color: 0x00e5ff });
+    const ring = new THREE.Mesh(ringGeo, this.ringMat);
     ring.rotation.x = Math.PI / 2;
     ring.position.y = -0.04;
     this.scene.add(ring);
@@ -917,6 +925,64 @@ export class Car3DScene {
     this.refreshMaterials();
     this.targetLookAt.set(0, 0.4, 0);
     this.targetCameraPos = this.defaultCameraPos.clone();
+  }
+
+  setStudioTheme(theme: 'dark' | 'light'): void {
+    this.isLightMode = theme === 'light';
+
+    if (this.isLightMode) {
+      // Clean, bright, photorealistic white/light studio background
+      this.scene.background = new THREE.Color(0xf6f8fc);
+      this.scene.fog = new THREE.FogExp2(0xf6f8fc, 0.02);
+
+      if (this.pedestalMat) {
+        this.pedestalMat.color.setHex(0xe2e8f0);
+        this.pedestalMat.roughness = 0.55;
+        this.pedestalMat.metalness = 0.25;
+      }
+      if (this.ringMat) {
+        this.ringMat.color.setHex(0x0284c7);
+      }
+      if (this.gridHelper) {
+        this.scene.remove(this.gridHelper);
+        this.gridHelper = new THREE.GridHelper(20, 40, 0x0284c7, 0xcfd8e3);
+        this.gridHelper.position.y = -0.01;
+        this.scene.add(this.gridHelper);
+      }
+      if (this.ambientLight) {
+        this.ambientLight.intensity = 1.05;
+      }
+      if (this.keyLight) {
+        this.keyLight.intensity = 2.0;
+        this.keyLight.color.setHex(0xffffff);
+      }
+    } else {
+      // Cyber Dark Studio
+      this.scene.background = new THREE.Color(0x0c0f17);
+      this.scene.fog = new THREE.FogExp2(0x0c0f17, 0.04);
+
+      if (this.pedestalMat) {
+        this.pedestalMat.color.setHex(0x111622);
+        this.pedestalMat.roughness = 0.4;
+        this.pedestalMat.metalness = 0.8;
+      }
+      if (this.ringMat) {
+        this.ringMat.color.setHex(0x00e5ff);
+      }
+      if (this.gridHelper) {
+        this.scene.remove(this.gridHelper);
+        this.gridHelper = new THREE.GridHelper(20, 40, 0x00f0ff, 0x1f293d);
+        this.gridHelper.position.y = -0.01;
+        this.scene.add(this.gridHelper);
+      }
+      if (this.ambientLight) {
+        this.ambientLight.intensity = 0.7;
+      }
+      if (this.keyLight) {
+        this.keyLight.intensity = 1.8;
+        this.keyLight.color.setHex(0xe8f0fe);
+      }
+    }
   }
 
   // ==========================================

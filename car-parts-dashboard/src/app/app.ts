@@ -85,6 +85,7 @@ export class App implements OnInit, OnDestroy {
   isAutoRotating = signal<boolean>(true);
   xRayLevel = signal<number>(55);
   explodeLevel = signal<number>(0);
+  studioTheme = signal<'dark' | 'light'>('light');
   componentKnowledge = signal<Record<string, ComponentInfo>>(COMPONENT_KNOWLEDGE_BASE);
 
   availableComponentsList = computed(() => Object.values(this.componentKnowledge()));
@@ -428,9 +429,16 @@ export class App implements OnInit, OnDestroy {
       }
     );
 
+    this.carScene.setStudioTheme(this.studioTheme());
     this.carScene.setXRay(this.xRayLevel() / 100);
     this.carScene.setExploded(this.explodeLevel() / 100);
     this.carScene.setAutoRotate(this.isAutoRotating());
+  }
+
+  toggleStudioTheme(): void {
+    const next = this.studioTheme() === 'dark' ? 'light' : 'dark';
+    this.studioTheme.set(next);
+    this.carScene?.setStudioTheme(next);
   }
 
   toggleAutoRotate(): void {

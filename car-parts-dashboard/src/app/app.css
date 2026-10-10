@@ -1872,3 +1872,61 @@
   text-align: center;
   margin: 6px 0 0 0;
 }
+
+/* ========================================================
+   LIGHT STUDIO THEME (WHITE / LIGHT GRAY 3D BACKGROUND)
+   ======================================================== */
+.vis-canvas-card.light-mode {
+  background: radial-gradient(circle at 50% 40%, #ffffff 0%, #e2e8f0 100%);
+  border: 1px solid #cbd5e1;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.vis-canvas-card.light-mode .hud-controls-bar {
+  background: rgba(255, 255, 255, 0.88);
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+}
+
+.vis-canvas-card.light-mode .hud-btn {
+  background: rgba(241, 245, 249, 0.9);
+  border-color: #cbd5e1;
+  color: #334155;
+}
+
+.vis-canvas-card.light-mode .hud-btn:hover {
+  background: #ffffff;
+  color: #0f172a;
+  border-color: #94a3b8;
+}
+
+.vis-canvas-card.light-mode .hud-btn-active {
+  background: #e0f2fe;
+  border-color: #0284c7;
+  color: #0369a1;
+  box-shadow: 0 1px 3px rgba(2, 132, 199, 0.2);
+}
+
+.vis-canvas-card.light-mode .hud-slider-group {
+  color: #475569;
+}
+
+.vis-canvas-card.light-mode .hud-slider-val {
+  color: #0284c7;
+}
+
+.vis-canvas-card.light-mode .hud-bottom-tip {
+  color: #64748b;
+}
+
+.vis-canvas-card.light-mode .hud-guidance-pill {
+  background: rgba(255, 255, 255, 0.95);
+  border-color: #0284c7;
+  color: #0f172a;
+  box-shadow: 0 4px 16px rgba(2, 132, 199, 0.2);
+}
+
+.vis-canvas-card.light-mode .hud-pulse-dot {
+  background: #0284c7;
+  box-shadow: 0 0 8px #0284c7;
+}

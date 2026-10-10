@@ -576,9 +576,21 @@
       <!-- Main 3D Studio Split Grid -->
       <div class="vis-studio-grid">
         <!-- LEFT: 3D VIEWPORT CANVAS CARD -->
-        <div class="vis-canvas-card" #carContainer>
+        <div class="vis-canvas-card" [class.light-mode]="studioTheme() === 'light'" #carContainer>
           <!-- Floating HUD Controls Bar -->
           <div class="hud-controls-bar">
+            <!-- Studio Theme Toggle (Light / Dark Background) -->
+            <button
+              type="button"
+              class="hud-btn"
+              [class.hud-btn-active]="studioTheme() === 'light'"
+              (click)="toggleStudioTheme()"
+              title="Toggle between White / Light Studio and Dark Background"
+            >
+              <span class="hud-icon">{{ studioTheme() === 'light' ? '☀️' : '🌙' }}</span>
+              <span>Studio: {{ studioTheme() === 'light' ? 'Light (White)' : 'Dark' }}</span>
+            </button>
+
             <!-- Auto-Spin Toggle -->
             <button
               type="button"
