@@ -1,0 +1,269 @@
+<!-- Toast notification -->
+<div class="toast" *ngIf="copyToast()">
+  {{ copyToast() }}
+</div>
+
+<div class="dashboard-wrapper">
+  <!-- HEADER NAVBAR -->
+  <header class="navbar">
+    <div class="nav-brand">
+      <div class="logo-circle">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10"></circle>
+          <path d="M12 2v20M2 12l10-10 10 10"></path>
+        </svg>
+      </div>
+      <div>
+        <h1 class="brand-title">Mercedes-Benz Parts Pulse</h1>
+        <p class="brand-subtitle">OEM vs Aftermarket Price Intelligence & Trend Analytics</p>
+      </div>
+    </div>
+    <div class="nav-actions">
+      <button class="btn btn-secondary" (click)="exportCsv()" [disabled]="!filteredParts().length">
+        <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+          <polyline points="7 10 12 15 17 10"></polyline>
+          <line x1="12" y1="15" x2="12" y2="3"></line>
+        </svg>
+        Export CSV
+      </button>
+    </div>
+  </header>
+
+  <!-- LOADING & ERROR STATES -->
+  <div *ngIf="loading()" class="state-card">
+    <div class="spinner"></div>
+    <p>Loading parts catalog and market intelligence...</p>
+  </div>
+
+  <div *ngIf="error()" class="state-card error-card">
+    <p>{{ error() }}</p>
+  </div>
+
+  <main *ngIf="!loading() && !error()">
+    <!-- FILTER BAR -->
+    <section class="filter-panel">
+      <div class="filter-grid">
+        <!-- Model Selector -->
+        <div class="filter-item">
+          <label>Vehicle Model</label>
+          <select [ngModel]="selectedModel()" (ngModelChange)="selectedModel.set($event)">
+            <option *ngFor="let m of models()" [value]="m">{{ m }}</option>
+          </select>
+        </div>
+
+        <!-- Year Selector -->
+        <div class="filter-item">
+          <label>Model Year</label>
+          <select [ngModel]="selectedYear()" (ngModelChange)="selectedYear.set(+$event)">
+            <option *ngFor="let y of years()" [value]="y">{{ y }}</option>
+          </select>
+        </div>
+
+        <!-- Category Selector -->
+        <div class="filter-item">
+          <label>Part Category</label>
+          <select [ngModel]="selectedCategory()" (ngModelChange)="selectedCategory.set($event)">
+            <option *ngFor="let c of categories()" [value]="c">{{ c }}</option>
+          </select>
+        </div>
+
+        <!-- Brand Selector -->
+        <div class="filter-item">
+          <label>Brand Filter</label>
+          <select [ngModel]="selectedBrand()" (ngModelChange)="selectedBrand.set($event)">
+            <option *ngFor="let b of availableBrands()" [value]="b">{{ b }}</option>
+          </select>
+        </div>
+
+        <!-- Tier Selector -->
+        <div class="filter-item">
+          <label>Part Tier</label>
+          <select [ngModel]="selectedTier()" (ngModelChange)="selectedTier.set($event)">
+            <option value="All">All Tiers</option>
+            <option value="OEM">OEM Genuine Only</option>
+            <option value="Aftermarket">Aftermarket Only</option>
+          </select>
+        </div>
+
+        <!-- Search Input -->
+        <div class="filter-item search-item">
+          <label>Search Keyword or Part #</label>
+          <input
+            type="text"
+            placeholder="e.g. Brembo, 0004209100, Ceramic..."
+            [ngModel]="searchQuery()"
+            (ngModelChange)="searchQuery.set($event)"
+          />
+        </div>
+      </div>
+    </section>
+
+    <!-- METRICS KPI ROW -->
+    <section class="kpi-grid">
+      <!-- OEM Benchmark -->
+      <div class="kpi-card">
+        <span class="kpi-label">⭐ OEM Genuine Price</span>
+        <div class="kpi-value oem-text">
+          {{ kpiMetrics().oemPrice !== null ? ('$' + kpiMetrics().oemPrice?.toFixed(2)) : 'N/A' }}
+        </div>
+        <span class="kpi-caption">Factory Mercedes-Benz specification</span>
+      </div>
+
+      <!-- Best Aftermarket -->
+      <div class="kpi-card">
+        <span class="kpi-label">🔧 Lowest Aftermarket</span>
+        <div class="kpi-value aft-text">
+          {{ kpiMetrics().aftermarketPrice !== null ? ('$' + kpiMetrics().aftermarketPrice?.toFixed(2)) : 'N/A' }}
+        </div>
+        <span class="kpi-caption">Certified Tier-1 replacement equivalent</span>
+      </div>
+
+      <!-- Max Savings -->
+      <div class="kpi-card highlight-card">
+        <span class="kpi-label">💰 Potential Savings</span>
+        <div class="kpi-value savings-text">
+          <ng-container *ngIf="kpiMetrics().savingsAmount > 0">
+            ${{ kpiMetrics().savingsAmount.toFixed(2) }}
+            <span class="badge badge-success">-{{ kpiMetrics().savingsPct.toFixed(1) }}%</span>
+          </ng-container>
+          <ng-container *ngIf="kpiMetrics().savingsAmount <= 0">
+            $0.00
+          </ng-container>
+        </div>
+        <span class="kpi-caption">Savings choosing aftermarket over OEM</span>
+      </div>
+
+      <!-- Inventory Count -->
+      <div class="kpi-card">
+        <span class="kpi-label">📦 Available In Stock</span>
+        <div class="kpi-value">{{ kpiMetrics().totalCount }}</div>
+        <span class="kpi-caption">Matching parts found for this fitment</span>
+      </div>
+    </section>
+
+    <!-- CHARTS ANALYTICS ROW -->
+    <section class="charts-row">
+      <!-- Cross-Platform Trend Line Chart -->
+      <div class="chart-card">
+        <div class="chart-header">
+          <h3>📈 Price Trends Across Vehicle Platforms</h3>
+          <span class="badge badge-neutral">{{ selectedCategory() }}</span>
+        </div>
+        <p class="chart-sub">Compares OEM Genuine baseline vs. Aftermarket average pricing across Mercedes platforms.</p>
+        <div class="chart-canvas-container">
+          <canvas #trendCanvas></canvas>
+        </div>
+      </div>
+
+      <!-- Brand Price Spread Horizontal Bar Chart -->
+      <div class="chart-card">
+        <div class="chart-header">
+          <h3>📊 Brand Price Spread</h3>
+          <span class="badge badge-neutral">{{ selectedModel() }}</span>
+        </div>
+        <p class="chart-sub">Real-time market price distribution by manufacturer for {{ selectedCategory() }}.</p>
+        <div class="chart-canvas-container">
+          <canvas #brandCanvas></canvas>
+        </div>
+      </div>
+    </section>
+
+    <!-- LISTINGS COMPARISON TABLE -->
+    <section class="listings-section">
+      <div class="listings-header">
+        <div>
+          <h2>Available Parts & Direct Retailer Links</h2>
+          <p class="listings-sub">
+            Showing {{ filteredParts().length }} options for {{ selectedYear() }} Mercedes-Benz {{ selectedModel() }} ({{ selectedCategory() }})
+          </p>
+        </div>
+        <div class="sort-controls">
+          <label>Sort By:</label>
+          <select [ngModel]="sortBy()" (ngModelChange)="sortBy.set($event)">
+            <option value="price-asc">Price: Low to High</option>
+            <option value="price-desc">Price: High to Low</option>
+            <option value="brand-asc">Brand: A to Z</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- No items found -->
+      <div *ngIf="!filteredParts().length" class="empty-state">
+        <p>No parts match the selected filters. Try clearing your search keyword or selecting "All Brands".</p>
+      </div>
+
+      <!-- Part Cards List -->
+      <div class="parts-list" *ngIf="filteredParts().length">
+        <article class="part-card" *ngFor="let item of filteredParts()">
+          <!-- Thumbnail -->
+          <div class="part-image-box">
+            <img
+              *ngIf="item.image_url"
+              [src]="item.image_url"
+              [alt]="item.part_name"
+              loading="lazy"
+              (error)="$any($event.target).style.display = 'none'"
+            />
+            <div class="placeholder-icon">🚗</div>
+          </div>
+
+          <!-- Part Details -->
+          <div class="part-info">
+            <div class="part-badges">
+              <span
+                class="badge"
+                [ngClass]="item.tier === 'OEM (Genuine)' ? 'badge-oem' : 'badge-aftermarket'"
+              >
+                {{ item.tier }}
+              </span>
+              <span class="badge badge-brand">{{ item.brand }}</span>
+              <span class="badge badge-source">{{ item.source }}</span>
+            </div>
+
+            <h3 class="part-title">{{ item.part_name }}</h3>
+
+            <div class="part-meta">
+              <span>SKU: <code>{{ item.sku }}</code></span>
+              <span *ngIf="item.part_number && item.part_number !== 'N/A'">
+                OEM Part #: <code>{{ item.part_number }}</code>
+                <button
+                  type="button"
+                  class="btn-icon"
+                  title="Copy Part Number"
+                  (click)="copyPartNumber(item.part_number)"
+                >
+                  📋
+                </button>
+              </span>
+            </div>
+          </div>
+
+          <!-- Price & Savings -->
+          <div class="part-price-box">
+            <div class="part-price">${{ item.price_usd.toFixed(2) }}</div>
+            <div
+              class="part-savings"
+              *ngIf="item.tier !== 'OEM (Genuine)' && getSavingsVsOem(item.price_usd) as savings"
+            >
+              🟢 Save ${{ savings.toFixed(2) }} vs OEM
+            </div>
+            <span class="verified-tag">✓ Fitment Verified</span>
+          </div>
+
+          <!-- Direct Outbound Action Button -->
+          <div class="part-action-box">
+            <a
+              [href]="item.product_url"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="btn btn-primary"
+            >
+              View on Retailer ↗
+            </a>
+          </div>
+        </article>
+      </div>
+    </section>
+  </main>
+</div>

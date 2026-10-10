@@ -1,0 +1,27 @@
+# Dependencies (Never push to GitHub)
+node_modules/
+**/node_modules/
+package-lock.json
+
+# Angular Build & Cache outputs
+dist/
+**/dist/
+.angular/
+**/.angular/
+tmp/
+**/tmp/
+
+# Python Cache & Virtual Environments
+__pycache__/
+*.pyc
+.venv/
+venv/
+env/
+
+# System and IDE files
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.log
+*.zip
