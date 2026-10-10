@@ -1,8 +1,8 @@
 # ========================================================
-# AutoParts Pulse - Python Requirements
+# AutoParts Pulse - Python Requirements (Angular Architecture)
 # ========================================================
 
-# REST API Server (api_server.py)
+# REST API Server for Angular Dashboard (api_server.py)
 Flask>=2.3.0
 Flask-Cors>=4.0.0
 
@@ -13,7 +13,3 @@ beautifulsoup4>=4.12.0
 
 # Data Processing & CSV Exports
 pandas>=2.0.0
-
-# Streamlit Prototype (app.py)
-streamlit>=1.30.0
-plotly>=5.18.0
