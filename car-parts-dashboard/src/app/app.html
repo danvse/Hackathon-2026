@@ -18,6 +18,42 @@
         <p class="brand-subtitle">Universal Cross-Retailer Price Intelligence, VIN Fitment & Multi-Store Checker</p>
       </div>
     </div>
+
+    <!-- MAIN NAVIGATION TABS -->
+    <nav class="nav-tabs">
+      <button
+        type="button"
+        class="nav-tab-btn"
+        [class.active]="activeTab() === 'scanner'"
+        (click)="setActiveTab('scanner')"
+      >
+        <span class="tab-icon">📊</span>
+        <span>Price Intelligence</span>
+      </button>
+
+      <button
+        type="button"
+        class="nav-tab-btn"
+        [class.active]="activeTab() === 'visualizer'"
+        (click)="setActiveTab('visualizer')"
+      >
+        <span class="tab-icon">🚗</span>
+        <span>3D Parts Visualizer</span>
+        <span class="tab-badge-glow">3D HUB</span>
+      </button>
+
+      <button
+        type="button"
+        class="nav-tab-btn"
+        [class.active]="activeTab() === 'watchlist'"
+        (click)="setActiveTab('watchlist')"
+      >
+        <span class="tab-icon">⭐</span>
+        <span>Watchlist</span>
+        <span class="tab-count-badge" *ngIf="watchlistSkus().length">{{ watchlistSkus().length }}</span>
+      </button>
+    </nav>
+
     <div class="nav-actions">
       <!-- Watchlist Toggle Button -->
       <button
@@ -52,8 +88,10 @@
   </div>
 
   <main *ngIf="!loading() && !error()">
-    <!-- UNIVERSAL VIN DECODER & GUARANTEED FITMENT SECTION -->
-    <section class="vin-section">
+    <!-- TAB 1 & 3: SCANNER & WATCHLIST VIEW -->
+    <div class="scanner-view-wrap" *ngIf="activeTab() === 'scanner' || activeTab() === 'watchlist'">
+      <!-- UNIVERSAL VIN DECODER & GUARANTEED FITMENT SECTION -->
+      <section class="vin-section">
       <div class="vin-card">
         <div class="vin-header">
           <div class="vin-title-group">
@@ -475,6 +513,209 @@
             </a>
           </div>
         </article>
+      </div>
+    </section>
+    </div>
+
+    <!-- TAB 2: 3D CAR VISUALIZER & INTERACTIVE COMPONENT HUB -->
+    <section class="visualizer-section" *ngIf="activeTab() === 'visualizer'">
+      <!-- Header Bar with Subsystem Quick Selector -->
+      <div class="vis-header-card">
+        <div class="vis-title-row">
+          <div class="vis-title-group">
+            <div class="vis-badge-row">
+              <span class="badge badge-glow">3D INTERACTIVE STUDIO</span>
+              <span class="badge badge-sub">HARDWARE ACCELERATED WEBGL</span>
+              <span class="badge badge-veh" *ngIf="decodedVehicle() as v">
+                VIN: {{ v.year }} {{ v.make }} {{ v.model }}
+              </span>
+            </div>
+            <h2>Interactive 3D Vehicle & Parts Explorer</h2>
+            <p class="vis-subtitle">
+              Orbit 360°, adjust X-Ray transparency to reveal internal mechanical systems, or explode assemblies outward. Click any part to inspect engineering specs, wear intervals, and failure symptoms.
+            </p>
+          </div>
+          <div class="vis-header-actions">
+            <button type="button" class="btn btn-secondary" (click)="resetCarCamera()">
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+                <path d="M3 3v5h5"></path>
+                <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"></path>
+                <path d="M16 21h5v-5"></path>
+              </svg>
+              Reset Camera
+            </button>
+            <button
+              type="button"
+              class="btn btn-primary btn-pulse-header"
+              (click)="viewPricesForComponent(selectedComponentInfo().category)"
+            >
+              Compare {{ selectedComponentInfo().category }} Prices ↗
+            </button>
+          </div>
+        </div>
+
+        <!-- Quick Subsystem Selector Pills -->
+        <div class="vis-quick-pills">
+          <span class="pills-label">Quick Select Subsystem:</span>
+          <div class="pills-scroll">
+            <button
+              *ngFor="let p of availableComponentsList()"
+              type="button"
+              class="comp-pill"
+              [class.comp-pill-active]="selectedComponentKey() === p.id"
+              (click)="select3DPart(p.id)"
+            >
+              <span class="pill-icon">{{ p.icon }}</span>
+              <span class="pill-name">{{ p.id }}</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Main 3D Studio Split Grid -->
+      <div class="vis-studio-grid">
+        <!-- LEFT: 3D VIEWPORT CANVAS CARD -->
+        <div class="vis-canvas-card" #carContainer>
+          <!-- Floating HUD Controls Bar -->
+          <div class="hud-controls-bar">
+            <!-- Auto-Spin Toggle -->
+            <button
+              type="button"
+              class="hud-btn"
+              [class.hud-btn-active]="isAutoRotating()"
+              (click)="toggleAutoRotate()"
+              title="Toggle Turntable 360° Auto-Spin"
+            >
+              <span class="hud-icon">{{ isAutoRotating() ? '⏸️' : '▶️' }}</span>
+              <span>Turntable: {{ isAutoRotating() ? 'ON' : 'PAUSED' }}</span>
+            </button>
+
+            <!-- X-Ray Slider -->
+            <div class="hud-slider-group">
+              <span class="hud-slider-label">👻 X-Ray Chassis:</span>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                [ngModel]="xRayLevel()"
+                (ngModelChange)="onXRayChange($event)"
+                class="hud-range"
+              />
+              <span class="hud-slider-val">{{ xRayLevel() }}%</span>
+            </div>
+
+            <!-- Exploded View Slider -->
+            <div class="hud-slider-group">
+              <span class="hud-slider-label">💥 Explode View:</span>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                [ngModel]="explodeLevel()"
+                (ngModelChange)="onExplodeChange($event)"
+                class="hud-range"
+              />
+              <span class="hud-slider-val">{{ explodeLevel() }}%</span>
+            </div>
+          </div>
+
+          <!-- HTML5 Three.js Canvas -->
+          <canvas #carCanvas class="vis-webgl-canvas"></canvas>
+
+          <!-- Floating Hover Guidance Indicator -->
+          <div class="hud-guidance-pill" *ngIf="hoveredComponentKey() as hov">
+            <span class="hud-pulse-dot"></span>
+            <span>Inspecting: <strong>{{ hov }}</strong> (Click to view full specs)</span>
+          </div>
+
+          <div class="hud-bottom-tip" *ngIf="!hoveredComponentKey()">
+            <span>💡 Click and drag to orbit 360° | Scroll to zoom | Click any highlighted component to inspect</span>
+          </div>
+        </div>
+
+        <!-- RIGHT: COMPONENT INFORMATION HUB PANEL -->
+        <div class="vis-info-panel" *ngIf="selectedComponentInfo() as comp">
+          <div class="info-card-header">
+            <div class="info-icon-badge">{{ comp.icon }}</div>
+            <div class="info-title-block">
+              <div class="info-system-pill">{{ comp.system }}</div>
+              <h3 class="info-part-title">{{ comp.name }}</h3>
+              <p class="info-tagline">{{ comp.tagline }}</p>
+            </div>
+          </div>
+
+          <!-- Quick Metadata Chips -->
+          <div class="info-meta-chips">
+            <div class="meta-chip">
+              <span class="chip-label">Service Interval</span>
+              <span class="chip-val">{{ comp.lifespan }}</span>
+            </div>
+            <div class="meta-chip">
+              <span class="chip-label">Price Benchmark</span>
+              <span class="chip-val highlight-green">{{ comp.priceRange }}</span>
+            </div>
+            <div class="meta-chip">
+              <span class="chip-label">DIY Difficulty</span>
+              <span class="chip-val highlight-diff">{{ comp.diyDifficulty }}</span>
+            </div>
+          </div>
+
+          <!-- What It Does Section -->
+          <div class="info-section">
+            <h4 class="section-heading">
+              <span class="sec-icon">📖</span> What It Does (Function)
+            </h4>
+            <p class="section-desc">{{ comp.description }}</p>
+          </div>
+
+          <!-- Warning Symptoms Section -->
+          <div class="info-section warning-section">
+            <h4 class="section-heading warning-heading">
+              <span class="sec-icon">⚠️</span> Failure Symptoms & Warning Signs
+            </h4>
+            <ul class="symptoms-list">
+              <li *ngFor="let s of comp.symptoms">
+                <span class="symptom-bullet">🔴</span>
+                <span>{{ s }}</span>
+              </li>
+            </ul>
+          </div>
+
+          <!-- OEM vs Aftermarket Buying Strategy -->
+          <div class="info-section">
+            <h4 class="section-heading">
+              <span class="sec-icon">⚖️</span> OEM vs Aftermarket Strategy
+            </h4>
+            <div class="oem-advice-box">
+              <p>{{ comp.oemVsAftermarket }}</p>
+            </div>
+          </div>
+
+          <!-- Recommended Tools -->
+          <div class="info-section" *ngIf="comp.tools.length">
+            <h4 class="section-heading">
+              <span class="sec-icon">🛠️</span> Recommended DIY Tools
+            </h4>
+            <div class="tools-tags-wrap">
+              <span class="tool-tag" *ngFor="let t of comp.tools">{{ t }}</span>
+            </div>
+          </div>
+
+          <!-- Cross-Tab Action Button -->
+          <div class="info-action-block">
+            <button
+              type="button"
+              class="btn btn-primary btn-block btn-pulse"
+              (click)="viewPricesForComponent(comp.category)"
+            >
+              <span>🚀 Compare Live Prices for {{ comp.name }} ↗</span>
+            </button>
+            <p class="action-caption">
+              Switches to Price Intelligence tab to compare RockAuto, AutoZone, FCP Euro & OEM Direct.
+            </p>
+          </div>
+        </div>
       </div>
     </section>
   </main>

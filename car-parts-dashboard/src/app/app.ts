@@ -1,6 +1,7 @@
 import {
   Component,
   OnInit,
+  OnDestroy,
   signal,
   computed,
   effect,
@@ -12,6 +13,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { Chart, registerables } from 'chart.js';
+import { Car3DScene, COMPONENT_KNOWLEDGE_BASE, ComponentInfo } from './car-3d-scene';
 
 Chart.register(...registerables);
 
@@ -62,13 +64,34 @@ export interface DecodedVehicle {
   templateUrl: './app.html',
   styleUrl: './app.css',
 })
-export class App implements OnInit {
+export class App implements OnInit, OnDestroy {
   private http = inject(HttpClient);
+
+  // Navigation Tabs: 'scanner' | 'visualizer' | 'watchlist'
+  activeTab = signal<'scanner' | 'visualizer' | 'watchlist'>('scanner');
 
   // Canvas elements for Chart.js
   trendCanvas = viewChild<ElementRef<HTMLCanvasElement>>('trendCanvas');
   brandCanvas = viewChild<ElementRef<HTMLCanvasElement>>('brandCanvas');
   historyCanvas = viewChild<ElementRef<HTMLCanvasElement>>('historyCanvas');
+
+  // 3D Visualizer Canvas & Engine State
+  carCanvasRef = viewChild<ElementRef<HTMLCanvasElement>>('carCanvas');
+  carContainerRef = viewChild<ElementRef<HTMLDivElement>>('carContainer');
+  private carScene: Car3DScene | null = null;
+
+  selectedComponentKey = signal<string>('Brake Rotors');
+  hoveredComponentKey = signal<string | null>(null);
+  isAutoRotating = signal<boolean>(true);
+  xRayLevel = signal<number>(55);
+  explodeLevel = signal<number>(0);
+  componentKnowledge = signal<Record<string, ComponentInfo>>(COMPONENT_KNOWLEDGE_BASE);
+
+  availableComponentsList = computed(() => Object.values(this.componentKnowledge()));
+  selectedComponentInfo = computed(() => {
+    const key = this.selectedComponentKey();
+    return this.componentKnowledge()[key] || this.componentKnowledge()['Brake Rotors'];
+  });
 
   private trendChart: Chart | null = null;
   private brandChart: Chart | null = null;
@@ -360,6 +383,87 @@ export class App implements OnInit {
         this.loading.set(false);
       },
     });
+  }
+
+  ngOnDestroy(): void {
+    if (this.carScene) {
+      this.carScene.destroy();
+      this.carScene = null;
+    }
+  }
+
+  // ==========================================
+  // TAB NAVIGATION & 3D CAR VISUALIZER
+  // ==========================================
+  setActiveTab(tab: 'scanner' | 'visualizer' | 'watchlist'): void {
+    this.activeTab.set(tab);
+    if (tab === 'watchlist') {
+      this.showWatchlistOnly.set(true);
+    } else if (tab === 'scanner') {
+      this.showWatchlistOnly.set(false);
+    } else if (tab === 'visualizer') {
+      setTimeout(() => this.initCarScene(), 80);
+    }
+  }
+
+  initCarScene(): void {
+    const canvasEl = this.carCanvasRef()?.nativeElement;
+    const containerEl = this.carContainerRef()?.nativeElement;
+    if (!canvasEl || !containerEl) return;
+
+    if (this.carScene) {
+      this.carScene.destroy();
+      this.carScene = null;
+    }
+
+    this.carScene = new Car3DScene();
+    this.carScene.init(
+      containerEl,
+      canvasEl,
+      (partKey: string) => {
+        this.selectedComponentKey.set(partKey);
+      },
+      (partKey: string | null) => {
+        this.hoveredComponentKey.set(partKey);
+      }
+    );
+
+    this.carScene.setXRay(this.xRayLevel() / 100);
+    this.carScene.setExploded(this.explodeLevel() / 100);
+    this.carScene.setAutoRotate(this.isAutoRotating());
+  }
+
+  toggleAutoRotate(): void {
+    const val = !this.isAutoRotating();
+    this.isAutoRotating.set(val);
+    this.carScene?.setAutoRotate(val);
+  }
+
+  onXRayChange(level: number): void {
+    this.xRayLevel.set(level);
+    this.carScene?.setXRay(level / 100);
+  }
+
+  onExplodeChange(level: number): void {
+    this.explodeLevel.set(level);
+    this.carScene?.setExploded(level / 100);
+  }
+
+  select3DPart(partKey: string): void {
+    this.selectedComponentKey.set(partKey);
+    this.carScene?.selectPart(partKey);
+  }
+
+  resetCarCamera(): void {
+    this.selectedComponentKey.set('Brake Rotors');
+    this.carScene?.resetCamera();
+  }
+
+  viewPricesForComponent(category: string): void {
+    this.setActiveTab('scanner');
+    this.selectedCategory.set(category);
+    this.copyToast.set(`🚀 Filtered catalog for ${category}!`);
+    setTimeout(() => this.copyToast.set(null), 3500);
   }
 
   // Calculate savings for an individual part vs OEM benchmark
