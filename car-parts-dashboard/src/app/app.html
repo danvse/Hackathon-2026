@@ -79,15 +79,16 @@
   <!-- HEADER NAVBAR -->
   <header class="navbar">
     <div class="nav-brand">
-      <div class="logo-circle">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="12" cy="12" r="10"></circle>
-          <path d="M12 2v20M2 12l10-10 10 10"></path>
+      <button type="button" class="home-btn" (click)="goHome()" aria-label="Home" title="Home">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M3 11.5 12 4l9 7.5"></path>
+          <path d="M5.5 10v9.5h4.5v-5.5h4v5.5h4.5V10"></path>
         </svg>
-      </div>
+        <span class="home-label">Home</span>
+      </button>
       <div>
         <h1 class="brand-title">AutoParts Pulse</h1>
-        <p class="brand-subtitle">Universal Cross-Retailer Price Intelligence, VIN Fitment & Multi-Store Checker</p>
+        <p class="brand-subtitle">Cross-retailer price comparison and VIN fitment</p>
       </div>
     </div>
 
@@ -163,7 +164,7 @@
   <!-- LOADING & ERROR STATES -->
   <div *ngIf="loading()" class="state-card">
     <div class="spinner"></div>
-    <p>Loading multi-retailer catalog and market intelligence...</p>
+    <p>Loading catalog...</p>
   </div>
 
   <div *ngIf="error()" class="state-card error-card">
@@ -175,143 +176,233 @@
     <div class="scanner-view-wrap" *ngIf="activeTab() === 'scanner' || activeTab() === 'watchlist'">
       <!-- UNIVERSAL VIN DECODER & GUARANTEED FITMENT SECTION -->
       <section class="vin-section">
-      <div class="vin-card">
-        <div class="vin-header">
-          <div class="vin-title-group">
-            <span class="badge badge-vin">TELEMETRY: UNIVERSAL VIN DECODER</span>
-            <h2>Guaranteed Fitment & Cross-Store Checker</h2>
-          </div>
-          <p class="vin-sub">
-            Enter ANY 17-character VIN (Toyota, Honda, Ford, BMW, Mercedes-Benz, Chevrolet, etc.) to decode exact specifications and compare prices across RockAuto, AutoZone, FCP Euro, and OEM Dealerships.
-          </p>
-        </div>
+        <div class="vin-card">
+          <!-- When vehicle is NOT selected: show vehicle search + VIN lookup toggle -->
+          <ng-container *ngIf="!vehicleSelected()">
+            <div class="vin-header">
+              <div class="vin-title-group">
+                <span class="badge badge-vin">TELEMETRY: UNIVERSAL VIN DECODER</span>
+                <h2>Guaranteed Fitment & Cross-Store Checker</h2>
+              </div>
+              <p class="vin-sub">
+                Search by make and model, or decode any 17-character VIN to verify fitment and compare real-time prices across RockAuto, AutoZone, FCP Euro, and OEM Dealerships.
+              </p>
+            </div>
 
-        <div class="vin-input-row">
-          <div class="vin-input-wrapper">
-            <input
-              type="text"
-              maxlength="17"
-              placeholder="e.g. 4T1BF1FKXLU000001 (Any 17-character VIN)"
-              [ngModel]="vinInput()"
-              (ngModelChange)="vinInput.set($event)"
-              (keyup.enter)="decodeVin()"
-              class="vin-input"
-            />
-            <button
-              class="btn btn-primary btn-decode"
-              (click)="decodeVin()"
-              [disabled]="vinLoading()"
-            >
-              <span *ngIf="!vinLoading()" class="btn-inner-flex">
-                <svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                  <circle cx="11" cy="11" r="8"></circle>
-                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            <div class="combo">
+              <input
+                type="text"
+                class="vehicle-input"
+                role="combobox"
+                aria-autocomplete="list"
+                aria-controls="vehicle-suggestions"
+                [attr.aria-expanded]="suggestionsOpen()"
+                autocomplete="off"
+                autocapitalize="off"
+                spellcheck="false"
+                enterkeyhint="search"
+                placeholder="Search make or model (e.g. 2020 Camry, F-150, or enter 17-char VIN)"
+                [ngModel]="vehicleQuery()"
+                (ngModelChange)="onVehicleQueryChange($event)"
+                (focus)="openSuggestions()"
+                (blur)="closeSuggestionsSoon()"
+                (keydown)="onSuggestionKey($event)"
+              />
+              <button
+                class="btn btn-primary btn-decode"
+                (click)="decodeVin()"
+                [disabled]="vinLoading()"
+              >
+                <span *ngIf="!vinLoading()" class="btn-inner-flex">
+                  <svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <circle cx="11" cy="11" r="8"></circle>
+                    <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                  </svg>
+                  DECODE & SCAN
+                </span>
+                <span *ngIf="vinLoading()">Decoding...</span>
+              </button>
+
+              <!-- Type-ahead Suggestions Dropdown -->
+              <ul
+                *ngIf="suggestionsOpen() && vehicleSuggestions().length"
+                id="vehicle-suggestions"
+                class="suggestions"
+                role="listbox"
+                (mousedown)="$event.preventDefault()"
+              >
+                <li class="suggestions-title" role="presentation" *ngIf="!vehicleQuery().trim()">Recommended</li>
+                <li
+                  *ngFor="let v of vehicleSuggestions(); let i = index"
+                  class="suggestion"
+                  role="option"
+                  [class.suggestion-active]="i === activeSuggestion()"
+                  [attr.aria-selected]="i === activeSuggestion()"
+                  (click)="selectVehicle(v)"
+                >
+                  <span class="suggestion-name">{{ v.make }} {{ v.model }}</span>
+                  <span class="suggestion-note" *ngIf="v.inCatalog">Saved prices</span>
+                </li>
+              </ul>
+
+              <p
+                *ngIf="suggestionsOpen() && vehicleQuery().trim() && !vehicleSuggestions().length"
+                class="suggestion-empty"
+              >
+                No match. Try the make, such as Toyota, or use a VIN below.
+              </p>
+            </div>
+
+            <!-- Quick Calibration / Popular Vehicles -->
+            <div class="vin-samples" *ngIf="quickVehicles().length">
+              <span class="samples-label">Popular:</span>
+              <button
+                type="button"
+                class="chip-btn"
+                *ngFor="let v of quickVehicles()"
+                (click)="selectVehicle(v, false)"
+              >
+                <svg class="vin-chip-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <rect x="2" y="11" width="13" height="6" rx="1"/>
+                  <path d="M15 11l4 2v4h-4"/>
+                  <circle cx="6" cy="17" r="2"/><circle cx="17" cy="17" r="2"/>
                 </svg>
-                DECODE & SCAN
-              </span>
-              <span *ngIf="vinLoading()">Decoding...</span>
-            </button>
-          </div>
-
-          <!-- Multi-Make Test VIN Chips -->
-          <div class="vin-samples">
-            <span class="samples-label">Quick Calibration VINs:</span>
-            <button
-              type="button"
-              class="chip-btn chip-trigger"
-              (click)="applySampleVin('4T1BF1FKXLU000001')"
-              title="2020 Toyota Camry (Live Multi-Retailer Hunt)"
-            >
-              <svg class="vin-chip-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.5 3c-.1.2-.1.4-.1.6v2.5c0 .6.4 1 1 1h2"/>
-                <circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/>
-              </svg>
-              2020 Toyota Camry
-            </button>
-            <button
-              type="button"
-              class="chip-btn"
-              (click)="applySampleVin('19XFC2F59ME000001')"
-            >
-              <svg class="vin-chip-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.5 3c-.1.2-.1.4-.1.6v2.5c0 .6.4 1 1 1h2"/>
-                <circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/>
-              </svg>
-              2021 Honda Civic
-            </button>
-            <button
-              type="button"
-              class="chip-btn"
-              (click)="applySampleVin('55SWF4KB9JU268482')"
-            >
-              <svg class="vin-chip-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.5 3c-.1.2-.1.4-.1.6v2.5c0 .6.4 1 1 1h2"/>
-                <circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/>
-              </svg>
-              2018 Mercedes C300
-            </button>
-            <button
-              type="button"
-              class="chip-btn"
-              (click)="applySampleVin('WBA5R1C58M8B00001')"
-            >
-              <svg class="vin-chip-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.5 3c-.1.2-.1.4-.1.6v2.5c0 .6.4 1 1 1h2"/>
-                <circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/>
-              </svg>
-              2021 BMW 330i
-            </button>
-            <button
-              type="button"
-              class="chip-btn"
-              (click)="applySampleVin('1FTFW1E84LFA00001')"
-            >
-              <svg class="vin-chip-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <rect x="2" y="11" width="13" height="6" rx="1"/>
-                <path d="M15 11l4 2v4h-4"/>
-                <circle cx="6" cy="17" r="2"/><circle cx="17" cy="17" r="2"/>
-              </svg>
-              2020 Ford F-150
-            </button>
-          </div>
-        </div>
-
-        <!-- VIN Error Alert -->
-        <div *ngIf="vinError()" class="vin-error-banner">
-          <svg class="icon-warning" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 18px; height: 18px; flex-shrink: 0;">
-            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
-            <line x1="12" y1="9" x2="12" y2="13"></line>
-            <line x1="12" y1="17" x2="12.01" y2="17"></line>
-          </svg>
-          <span>{{ vinError() }}</span>
-        </div>
-
-        <!-- Decoded Vehicle Verified Fitment Card -->
-        <div *ngIf="decodedVehicle() as v" class="decoded-result-box">
-          <div class="decoded-left">
-            <div class="fitment-verified-badge">
-              <svg class="shield-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px;">
-                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-                <polyline points="9 12 11 14 15 10"></polyline>
-              </svg>
-              <strong>GUARANTEED FITMENT VERIFIED</strong>
+                {{ v.make }} {{ v.model }}
+              </button>
             </div>
-            <h3 class="decoded-name">{{ v.year }} {{ v.make }} {{ v.model }} ({{ v.trim }})</h3>
-            <div class="decoded-specs">
-              <span class="spec-tag">Engine: <strong>{{ v.engine }}</strong></span>
-              <span class="spec-tag">Drivetrain: <strong>{{ v.driveType }}</strong></span>
-              <span class="spec-tag">Body: <strong>{{ v.bodyClass }}</strong></span>
-              <span class="spec-tag">VIN: <code>{{ v.vin }}</code></span>
-            </div>
-          </div>
-          <div class="decoded-right">
-            <button class="btn btn-outline-sm" (click)="clearVin()">
-              Clear Fitment Filter
+
+            <!-- Toggle VIN Panel Button -->
+            <button
+              type="button"
+              class="link-btn"
+              [attr.aria-expanded]="showVinPanel()"
+              (click)="toggleVinPanel()"
+            >
+              {{ showVinPanel() ? 'Hide VIN lookup' : 'Have a VIN? Use it instead' }}
             </button>
-          </div>
+
+            <!-- Expandable VIN Panel -->
+            <div class="vin-panel" *ngIf="showVinPanel()">
+              <div class="vin-input-wrapper">
+                <input
+                  type="text"
+                  maxlength="17"
+                  placeholder="17-character VIN, e.g. 4T1BF1FKXLU000001"
+                  [ngModel]="vinInput()"
+                  (ngModelChange)="vinInput.set($event)"
+                  (keyup.enter)="decodeVin()"
+                  class="vin-input"
+                />
+                <button
+                  class="btn btn-primary btn-decode"
+                  (click)="decodeVin()"
+                  [disabled]="vinLoading()"
+                >
+                  <span *ngIf="!vinLoading()">Decode VIN</span>
+                  <span *ngIf="vinLoading()">Decoding...</span>
+                </button>
+              </div>
+
+              <!-- Multi-Make Test VIN Chips -->
+              <div class="vin-samples">
+                <span class="samples-label">Quick Calibration VINs:</span>
+                <button
+                  type="button"
+                  class="chip-btn chip-trigger"
+                  (click)="applySampleVin('4T1BF1FKXLU000001')"
+                  title="2020 Toyota Camry (Live Multi-Retailer Hunt)"
+                >
+                  <svg class="vin-chip-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.5 3c-.1.2-.1.4-.1.6v2.5c0 .6.4 1 1 1h2"/>
+                    <circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/>
+                  </svg>
+                  2020 Toyota Camry
+                </button>
+                <button
+                  type="button"
+                  class="chip-btn"
+                  (click)="applySampleVin('19XFC2F59ME000001')"
+                >
+                  <svg class="vin-chip-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.5 3c-.1.2-.1.4-.1.6v2.5c0 .6.4 1 1 1h2"/>
+                    <circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/>
+                  </svg>
+                  2021 Honda Civic
+                </button>
+                <button
+                  type="button"
+                  class="chip-btn"
+                  (click)="applySampleVin('55SWF4KB9JU268482')"
+                >
+                  <svg class="vin-chip-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.5 3c-.1.2-.1.4-.1.6v2.5c0 .6.4 1 1 1h2"/>
+                    <circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/>
+                  </svg>
+                  2018 Mercedes C300
+                </button>
+                <button
+                  type="button"
+                  class="chip-btn"
+                  (click)="applySampleVin('WBA5R1C58M8B00001')"
+                >
+                  <svg class="vin-chip-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.5 3c-.1.2-.1.4-.1.6v2.5c0 .6.4 1 1 1h2"/>
+                    <circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/>
+                  </svg>
+                  2021 BMW 330i
+                </button>
+              </div>
+
+              <!-- VIN Error Alert -->
+              <div *ngIf="vinError()" class="vin-error-banner">
+                <svg class="icon-warning" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 18px; height: 18px; flex-shrink: 0;">
+                  <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                  <line x1="12" y1="9" x2="12" y2="13"></line>
+                  <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                </svg>
+                <span>{{ vinError() }}</span>
+              </div>
+            </div>
+          </ng-container>
+
+          <!-- When vehicle IS selected: show vehicle bar with year picker and change button -->
+          <ng-container *ngIf="vehicleSelected()">
+            <div class="vehicle-bar">
+              <div class="vehicle-bar-main">
+                <span class="vehicle-bar-label">TARGET VEHICLE CALIBRATED</span>
+                <h2 class="vehicle-name">{{ selectedMake() }} {{ selectedModel() }}</h2>
+              </div>
+              <div class="vehicle-bar-controls">
+                <label class="year-field">
+                  <span>Year</span>
+                  <select [ngModel]="selectedYear()" (ngModelChange)="setYear($event)">
+                    <option *ngFor="let y of yearOptions()" [value]="y">{{ y }}</option>
+                  </select>
+                </label>
+                <button type="button" class="btn btn-outline-sm" (click)="changeVehicle()">Change Vehicle</button>
+              </div>
+            </div>
+
+            <!-- Decoded Vehicle Specs (if decoded via VIN) -->
+            <div *ngIf="decodedVehicle() as v" class="decoded-result-box">
+              <div class="fitment-verified-badge">
+                <svg class="shield-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px;">
+                  <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                  <polyline points="9 12 11 14 15 10"></polyline>
+                </svg>
+                <strong>GUARANTEED FITMENT VERIFIED</strong>
+              </div>
+              <div class="decoded-specs">
+                <span class="spec-tag">Trim: <strong>{{ v.trim }}</strong></span>
+                <span class="spec-tag">Engine: <strong>{{ v.engine }}</strong></span>
+                <span class="spec-tag">Drivetrain: <strong>{{ v.driveType }}</strong></span>
+                <span class="spec-tag">Body: <strong>{{ v.bodyClass }}</strong></span>
+                <span class="spec-tag">VIN: <code>{{ v.vin }}</code></span>
+              </div>
+            </div>
+          </ng-container>
         </div>
-      </div>
-    </section>
+      </section>
 
     <!-- LIVE MULTI-RETAILER TELEMETRY SCANNER BANNER -->
     <section *ngIf="isHunting()" class="hud-radar-active-banner">
@@ -353,68 +444,51 @@
       </div>
     </section>
 
-    <!-- UNIVERSAL FILTER BAR -->
-    <section class="filter-panel" *ngIf="!showWatchlistOnly()">
+    <!-- COMPONENT SEARCH: only part filters, shown after a vehicle is chosen -->
+    <section class="filter-panel" *ngIf="vehicleSelected() && !showWatchlistOnly()">
       <div class="filter-grid">
-        <!-- Vehicle Make Selector -->
         <div class="filter-item">
-          <label>Vehicle Make</label>
-          <select [ngModel]="selectedMake()" (ngModelChange)="selectedMake.set($event); selectedModel.set('All')">
-            <option *ngFor="let m of makes()" [value]="m">{{ m }}</option>
-          </select>
-        </div>
-
-        <!-- Model Selector -->
-        <div class="filter-item">
-          <label>Vehicle Model</label>
-          <select [ngModel]="selectedModel()" (ngModelChange)="selectedModel.set($event)">
-            <option *ngFor="let m of models()" [value]="m">{{ m }}</option>
-          </select>
-        </div>
-
-        <!-- Year Selector -->
-        <div class="filter-item">
-          <label>Model Year</label>
-          <select [ngModel]="selectedYear()" (ngModelChange)="selectedYear.set(+$event)">
-            <option *ngFor="let y of years()" [value]="y">{{ y }}</option>
-          </select>
-        </div>
-
-        <!-- Category Selector -->
-        <div class="filter-item">
-          <label>Part Category</label>
+          <label>Part category</label>
           <select [ngModel]="selectedCategory()" (ngModelChange)="selectedCategory.set($event)">
             <option *ngFor="let c of categories()" [value]="c">{{ c }}</option>
           </select>
         </div>
 
-        <!-- Retailer Store Selector -->
+        <div class="filter-item search-item">
+          <label>Search keyword or part number</label>
+          <input
+            type="text"
+            placeholder="Brand or part number"
+            [ngModel]="searchQuery()"
+            (ngModelChange)="searchQuery.set($event)"
+          />
+        </div>
+      </div>
+
+      <button
+        type="button"
+        class="link-btn"
+        [attr.aria-expanded]="showMoreFilters()"
+        (click)="toggleMoreFilters()"
+      >
+        {{ showMoreFilters() ? 'Fewer filters' : 'More filters' }}
+      </button>
+
+      <div class="filter-grid more-filters" *ngIf="showMoreFilters()">
         <div class="filter-item">
-          <label>Retailer Store</label>
+          <label>Retailer store</label>
           <select [ngModel]="selectedRetailer()" (ngModelChange)="selectedRetailer.set($event)">
             <option *ngFor="let r of retailers()" [value]="r">{{ r }}</option>
           </select>
         </div>
 
-        <!-- Part Tier -->
         <div class="filter-item">
-          <label>Part Tier</label>
+          <label>Part tier</label>
           <select [ngModel]="selectedTier()" (ngModelChange)="selectedTier.set($event)">
             <option value="All">All Tiers</option>
             <option value="OEM">OEM Genuine Only</option>
             <option value="Aftermarket">Aftermarket Only</option>
           </select>
-        </div>
-
-        <!-- Search Input -->
-        <div class="filter-item search-item">
-          <label>Search Keyword or Part #</label>
-          <input
-            type="text"
-            placeholder="e.g. Akebono, Denso, Duralast, Brembo..."
-            [ngModel]="searchQuery()"
-            (ngModelChange)="searchQuery.set($event)"
-          />
         </div>
       </div>
     </section>
@@ -431,7 +505,7 @@
         <p>Showing {{ filteredParts().length }} bookmarked parts. Watchlist alerts monitor price drops and 1-year all-time lows across stores.</p>
       </div>
       <button class="btn btn-secondary" (click)="showWatchlistOnly.set(false)">
-        View Full Catalog
+        View catalog
       </button>
     </section>
 
@@ -499,8 +573,32 @@
       </div>
     </section>
 
+    <!-- SUMMARY / ANALYTICS TABS -->
+    <div class="tabs" role="tablist" *ngIf="!showWatchlistOnly() && filteredParts().length">
+      <button
+        type="button"
+        role="tab"
+        class="tab"
+        [class.tab-active]="summaryTab() === 'cost'"
+        [attr.aria-selected]="summaryTab() === 'cost'"
+        (click)="setSummaryTab('cost')"
+      >
+        Market Analytics & Trends
+      </button>
+      <button
+        type="button"
+        role="tab"
+        class="tab"
+        [class.tab-active]="summaryTab() === 'service'"
+        [attr.aria-selected]="summaryTab() === 'service'"
+        (click)="setSummaryTab('service')"
+      >
+        Service & Labor Estimate
+      </button>
+    </div>
+
     <!-- CHARTS ANALYTICS ROW -->
-    <section class="charts-row" *ngIf="!showWatchlistOnly() && filteredParts().length">
+    <section class="charts-row" *ngIf="!showWatchlistOnly() && filteredParts().length && summaryTab() === 'cost'">
       <!-- Cross-Platform Trend Line Chart -->
       <div class="chart-card">
         <div class="chart-header">
@@ -536,6 +634,50 @@
       </div>
     </section>
 
+    <!-- SERVICE & LABOR ESTIMATE -->
+    <section class="summary-card" *ngIf="!showWatchlistOnly() && filteredParts().length && summaryTab() === 'service'">
+      <div class="summary-head">
+        <span class="summary-context">{{ selectedCategory() }} for {{ selectedYear() }} {{ selectedMake() }} {{ selectedModel() }}</span>
+      </div>
+      <p class="service-lead">Estimated total if a service center or garage does the work: parts plus labor.</p>
+      <div class="summary-value">{{ moneyRange(serviceEstimate().overall) }}</div>
+      <p class="summary-caption">
+        Average part price ({{ money(kpiMetrics().avgPrice) }}) plus {{ serviceEstimate().tier.label | lowercase }} labor
+        ({{ moneyRange(serviceEstimate().labor) }}, {{ serviceEstimate().tier.time | lowercase }}).
+      </p>
+
+      <div class="summary-row">
+        <div class="summary-stat">
+          <span class="summary-stat-label">With aftermarket part</span>
+          <span class="summary-stat-value aft-text">{{ moneyRange(serviceEstimate().aftermarket) }}</span>
+        </div>
+        <div class="summary-stat">
+          <span class="summary-stat-label">With OEM part</span>
+          <span class="summary-stat-value oem-text">{{ moneyRange(serviceEstimate().oem) }}</span>
+        </div>
+      </div>
+
+      <div class="filter-item service-shop">
+        <label for="shop-type">Shop type</label>
+        <select id="shop-type" [ngModel]="shopTypeId()" (ngModelChange)="setShopType($event)">
+          <option *ngFor="let shop of shopTypes" [value]="shop.id">{{ shop.label }}</option>
+        </select>
+        <span class="shop-hint">Shop labor rate: {{ serviceEstimate().shop.rate }}</span>
+      </div>
+
+      <div class="service-notes">
+        <div class="service-note">
+          <h3>Your quote will differ</h3>
+          <p>Actual quotes vary with your vehicle's condition, your exact location and the repair shop you choose.</p>
+        </div>
+      </div>
+
+      <p class="disclaimer">
+        Disclaimer: automotive labor rates change often because of inflation and regional economic factors.
+        These numbers are estimates based on 2026 industry averages and should be used only as a general guide.
+      </p>
+    </section>
+
     <!-- MISSING PART / ON-DEMAND AUTO-HUNTER TRIGGER CARD -->
     <section *ngIf="!filteredParts().length && !isHunting()" class="no-parts-hunter-trigger">
       <div class="hunter-trigger-card hud-cockpit-card">
@@ -566,20 +708,17 @@
       </div>
     </section>
 
-    <!-- LISTINGS COMPARISON TABLE -->
-    <section class="listings-section" *ngIf="filteredParts().length">
+    <!-- LISTINGS -->
+    <section class="listings-section" *ngIf="hasResults()">
       <div class="listings-header">
         <div>
-          <h2>Available Parts & Cross-Store Price Intelligence</h2>
+          <h2>Parts</h2>
           <p class="listings-sub" *ngIf="!showWatchlistOnly()">
-            Showing {{ filteredParts().length }} verified options for {{ selectedYear() }} {{ selectedMake() !== 'All' ? selectedMake() : '' }} {{ selectedModel() !== 'All' ? selectedModel() : '' }} ({{ selectedCategory() }}) across multiple retailers
-          </p>
-          <p class="listings-sub" *ngIf="showWatchlistOnly()">
-            Showing {{ filteredParts().length }} tracked parts from your personal Watchlist.
+            {{ filteredParts().length }} options
           </p>
         </div>
         <div class="sort-controls">
-          <label>Sort By:</label>
+          <label>Sort by</label>
           <select [ngModel]="sortBy()" (ngModelChange)="sortBy.set($event)">
             <option value="price-asc">Price: Low to High</option>
             <option value="price-desc">Price: High to Low</option>
@@ -588,7 +727,7 @@
         </div>
       </div>
 
-      <!-- Part Cards List (Clean, Tight 4-Column Layout) -->
+      <!-- Part cards -->
       <div class="parts-list">
         <article class="part-card" *ngFor="let item of filteredParts()">
           <!-- Thumbnail with Bookmark Icon -->
@@ -621,12 +760,10 @@
           <!-- Part Details -->
           <div class="part-info">
             <div class="part-badges">
-              <!-- Retailer Store Badge -->
               <span class="badge badge-store" [ngClass]="getStoreClass(item.source)">
                 <span class="store-dot"></span> {{ item.source }}
               </span>
 
-              <!-- Tier Badge -->
               <span
                 class="badge"
                 [ngClass]="item.tier === 'OEM (Genuine)' ? 'badge-oem' : 'badge-aftermarket'"
@@ -634,15 +771,12 @@
                 {{ item.tier }}
               </span>
 
-              <!-- Brand Badge -->
               <span class="badge badge-brand">{{ item.brand }}</span>
 
-              <!-- Lowest Price Store Badge -->
               <span *ngIf="isLowestPrice(item)" class="badge badge-lowest-price">
                 <span class="hud-optic-target"></span> OPTIMAL STORE QUOTE
               </span>
 
-              <!-- All-Time Low Badge -->
               <span *ngIf="item.is_all_time_low" class="badge badge-atl">
                 <span class="hud-led-glow"></span> 1-YR HISTORICAL FLOOR
               </span>
@@ -655,24 +789,33 @@
 
             <h3 class="part-title">{{ item.part_name }}</h3>
 
-            <div class="part-meta">
-              <span>Make: <strong>{{ item.make }}</strong></span>
-              <span>Model: <strong>{{ item.model }}</strong></span>
-              <span>SKU: <code>{{ item.sku }}</code></span>
-              <span *ngIf="item.part_number && item.part_number !== 'N/A'">
-                Part #: <code>{{ item.part_number }}</code>
-                <button
-                  type="button"
-                  class="btn-icon"
-                  title="Copy Part Number"
-                  (click)="copyPartNumber(item.part_number)"
-                >
-                  <svg class="copy-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-                  </svg>
-                </button>
-              </span>
+            <button
+              type="button"
+              class="btn-details"
+              [attr.aria-expanded]="isExpanded(item.sku)"
+              (click)="toggleDetails(item.sku)"
+            >
+              {{ isExpanded(item.sku) ? 'Hide details' : 'Details' }}
+            </button>
+
+            <div class="part-details" *ngIf="isExpanded(item.sku)">
+              <div class="part-meta">
+                <span>Make: <strong>{{ item.make }}</strong></span>
+                <span>Model: <strong>{{ item.model }}</strong></span>
+                <span>Year: <strong>{{ item.year }}</strong></span>
+                <span>SKU: <code>{{ item.sku }}</code></span>
+                <span *ngIf="item.part_number && item.part_number !== 'N/A'">
+                  Part #: <code>{{ item.part_number }}</code>
+                  <button
+                    type="button"
+                    class="btn-icon"
+                    title="Copy Part Number"
+                    (click)="copyPartNumber(item.part_number)"
+                  >
+                    Copy
+                  </button>
+                </span>
+              </div>
             </div>
 
             <!-- Price History Quick Action -->
@@ -702,7 +845,7 @@
             >
               <span class="hud-delta-tag"><span class="hud-delta-led"></span> SAVE ${{ savings.toFixed(2) }} VS OEM</span>
             </div>
-            <span class="verified-tag">✓ Fitment Verified</span>
+            <span class="verified-tag">✓ Fitment verified</span>
           </div>
 
           <!-- Direct Outbound Action Button -->
@@ -1013,16 +1156,16 @@
             {{ part.source }}
           </span>
           <h2 class="modal-title">{{ part.part_name }}</h2>
-          <p class="modal-sub">Brand: {{ part.brand }} | Store: {{ part.source }} | SKU: {{ part.sku }}</p>
+          <p class="modal-sub">{{ part.brand }} · {{ part.source }} · SKU {{ part.sku }}</p>
         </div>
-        <button class="modal-close-btn" (click)="closePriceHistoryModal()">✕</button>
+        <button class="modal-close-btn" aria-label="Close" (click)="closePriceHistoryModal()">✕</button>
       </div>
 
       <div class="modal-body">
         <!-- Quick Stats Grid -->
         <div class="modal-stats-grid">
           <div class="mstat-card">
-            <span class="mstat-label">Current Price</span>
+            <span class="mstat-label">Current price</span>
             <div class="mstat-val">${{ part.price_usd.toFixed(2) }}</div>
           </div>
 
@@ -1032,19 +1175,19 @@
           </div>
 
           <div class="mstat-card">
-            <span class="mstat-label">1-Year High</span>
+            <span class="mstat-label">1-year high</span>
             <div class="mstat-val">${{ part.all_time_high?.toFixed(2) }}</div>
           </div>
 
           <div class="mstat-card">
-            <span class="mstat-label">Best Time to Buy</span>
+            <span class="mstat-label">Buy rating</span>
             <div class="mstat-val rating-text">{{ part.buy_rating || 'Good Deal' }}</div>
           </div>
         </div>
 
         <!-- Chart Timeframe Controls -->
         <div class="timeframe-row">
-          <span class="timeframe-label">History Range:</span>
+          <span class="timeframe-label">Range</span>
           <div class="btn-group">
             <button
               class="tf-btn"
@@ -1098,7 +1241,7 @@
               />
             </div>
             <button class="btn btn-primary" (click)="saveTargetAlert()">
-              Set Price Alert
+              Set alert
             </button>
           </div>
         </div>
