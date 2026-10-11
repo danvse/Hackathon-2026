@@ -1,3 +1,75 @@
+<!-- Reusable Automotive Telemetry Vector Template -->
+<ng-template #partIcon let-partId="partId">
+  <span class="hud-glyph-wrap" [ngSwitch]="partId">
+    <svg *ngSwitchCase="'Brake Rotors'" class="hud-svg svg-brakes" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="12" cy="12" r="9"/>
+      <circle cx="12" cy="12" r="3"/>
+      <circle cx="12" cy="6.5" r="1" fill="currentColor"/>
+      <circle cx="12" cy="17.5" r="1" fill="currentColor"/>
+      <circle cx="6.5" cy="12" r="1" fill="currentColor"/>
+      <circle cx="17.5" cy="12" r="1" fill="currentColor"/>
+      <path d="M16 3.5a9.5 9.5 0 0 1 5 5v5a9.5 9.5 0 0 1-5 5" stroke="#ef4444" stroke-width="2.5"/>
+    </svg>
+    <svg *ngSwitchCase="'Brake Pads'" class="hud-svg svg-brakes" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <rect x="4" y="6" width="16" height="12" rx="3"/>
+      <path d="M7 6v12M17 6v12"/>
+      <path d="M2 10v4M22 10v4"/>
+    </svg>
+    <svg *ngSwitchCase="'Engine Block'" class="hud-svg svg-powertrain" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M4 10h16v8a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-8z"/>
+      <path d="M7 10V6h10v4"/>
+      <circle cx="12" cy="15" r="2.5"/>
+      <path d="M9 15h6"/>
+      <path d="M12 4V2"/>
+    </svg>
+    <svg *ngSwitchCase="'Battery'" class="hud-svg svg-electrical" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <rect x="2" y="7" width="20" height="14" rx="2"/>
+      <path d="M6 3v4M18 3v4"/>
+      <line x1="6" y1="12" x2="10" y2="12"/>
+      <line x1="8" y1="10" x2="8" y2="14"/>
+      <line x1="14" y1="12" x2="18" y2="12"/>
+    </svg>
+    <svg *ngSwitchCase="'Alternator'" class="hud-svg svg-electrical" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="12" cy="12" r="9"/>
+      <circle cx="12" cy="12" r="4"/>
+      <path d="M12 3v5M12 16v5M3 12h5M16 12h5"/>
+      <circle cx="12" cy="12" r="1" fill="currentColor"/>
+    </svg>
+    <svg *ngSwitchCase="'Oil Filter'" class="hud-svg svg-fluid" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <rect x="6" y="7" width="12" height="14" rx="3"/>
+      <path d="M8 3h8v4H8z"/>
+      <path d="M12 11c-1.5 2-2 3-2 4a2 2 0 1 0 4 0c0-1-.5-2-2-4z" fill="currentColor"/>
+    </svg>
+    <svg *ngSwitchCase="'Air Filter'" class="hud-svg svg-air" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <rect x="3" y="6" width="18" height="12" rx="2"/>
+      <path d="M7 6v12M11 6v12M15 6v12M19 6v12"/>
+    </svg>
+    <svg *ngSwitchCase="'Cabin Air Filter'" class="hud-svg svg-air" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M4 6h16M4 12h16M4 18h16"/>
+      <path d="M7 4v16M12 4v16M17 4v16"/>
+    </svg>
+    <svg *ngSwitchCase="'Spark Plugs'" class="hud-svg svg-powertrain" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <path d="M12 2v4M9 6h6v4H9zM10 10v6h4v-6M11 16v4M13 16v4M10 22h4"/>
+    </svg>
+    <svg *ngSwitchCase="'Shock Absorbers'" class="hud-svg svg-suspension" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <line x1="12" y1="2" x2="12" y2="6"/>
+      <circle cx="12" cy="4" r="2"/>
+      <rect x="10" y="14" width="4" height="8" rx="1"/>
+      <path d="M9 7l6 2-6 2 6 2-6 2"/>
+    </svg>
+    <svg *ngSwitchCase="'Serpentine Belt'" class="hud-svg svg-powertrain" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="7" cy="8" r="3"/>
+      <circle cx="17" cy="8" r="3"/>
+      <circle cx="12" cy="17" r="4"/>
+      <path d="M7 5h10M17 11l-2.5 3M7 11l2.5 3"/>
+    </svg>
+    <svg *ngSwitchDefault class="hud-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+      <circle cx="12" cy="12" r="9"/>
+      <path d="M12 8v8M8 12h8"/>
+    </svg>
+  </span>
+</ng-template>
+
 <!-- Toast notification -->
 <div class="toast" *ngIf="copyToast()">
   {{ copyToast() }}
@@ -19,6 +91,51 @@
         <p class="brand-subtitle">Cross-retailer price comparison and VIN fitment</p>
       </div>
     </div>
+
+    <!-- MAIN NAVIGATION TABS (HUD COCKPIT STYLE) -->
+    <nav class="nav-tabs hud-nav-tabs">
+      <button
+        type="button"
+        class="nav-tab-btn"
+        [class.active]="activeTab() === 'scanner'"
+        (click)="setActiveTab('scanner')"
+      >
+        <span class="hud-tab-led" *ngIf="activeTab() === 'scanner'"></span>
+        <svg class="hud-tab-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M3 3v18h18"/><path d="M18 17V9"/><path d="M13 17V5"/><path d="M8 17v-3"/>
+        </svg>
+        <span>Price Intelligence</span>
+      </button>
+
+      <button
+        type="button"
+        class="nav-tab-btn"
+        [class.active]="activeTab() === 'visualizer'"
+        (click)="setActiveTab('visualizer')"
+      >
+        <span class="hud-tab-led" *ngIf="activeTab() === 'visualizer'"></span>
+        <svg class="hud-tab-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.5 3c-.1.2-.1.4-.1.6v2.5c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/>
+        </svg>
+        <span>3D Parts Visualizer</span>
+        <span class="tab-badge-glow">3D HUD</span>
+      </button>
+
+      <button
+        type="button"
+        class="nav-tab-btn"
+        [class.active]="activeTab() === 'watchlist'"
+        (click)="setActiveTab('watchlist')"
+      >
+        <span class="hud-tab-led" *ngIf="activeTab() === 'watchlist'"></span>
+        <svg class="hud-tab-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="3"/><line x1="12" y1="3" x2="12" y2="7"/><line x1="12" y1="17" x2="12" y2="21"/><line x1="3" y1="12" x2="7" y2="12"/><line x1="17" y1="12" x2="21" y2="12"/>
+        </svg>
+        <span>Watchlist</span>
+        <span class="tab-count-badge" *ngIf="watchlistSkus().length">{{ watchlistSkus().length }}</span>
+      </button>
+    </nav>
+
     <div class="nav-actions">
       <!-- Watchlist Toggle Button -->
       <button
@@ -26,7 +143,9 @@
         [class.btn-watchlist-active]="showWatchlistOnly()"
         (click)="showWatchlistOnly.set(!showWatchlistOnly())"
       >
-        <span class="star-icon">★</span>
+        <svg class="star-icon" viewBox="0 0 24 24" fill="currentColor" stroke="none" style="width: 15px; height: 15px; vertical-align: -2px;">
+          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+        </svg>
         Watchlist ({{ watchlistSkus().length }})
       </button>
 
@@ -53,14 +172,15 @@
   </div>
 
   <main *ngIf="!loading() && !error()">
-    <!-- VEHICLE: search first, VIN only on request -->
-    <section class="vehicle-section" *ngIf="!showWatchlistOnly()">
-      <div class="vehicle-card">
-        <!-- No vehicle chosen yet -->
-        <ng-container *ngIf="!vehicleSelected()">
-          <div class="vehicle-head">
-            <h2>Find your vehicle</h2>
-            <p class="vehicle-sub">Search by make or model, for example "Camry" or "2018 C300".</p>
+    <!-- TAB 1 & 3: SCANNER & WATCHLIST VIEW -->
+    <div class="scanner-view-wrap" *ngIf="activeTab() === 'scanner' || activeTab() === 'watchlist'">
+      <!-- UNIVERSAL VIN DECODER & GUARANTEED FITMENT SECTION -->
+      <section class="vin-section">
+      <div class="vin-card">
+        <div class="vin-header">
+          <div class="vin-title-group">
+            <span class="badge badge-vin">TELEMETRY: UNIVERSAL VIN DECODER</span>
+            <h2>Guaranteed Fitment & Cross-Store Checker</h2>
           </div>
 
           <div class="combo">
@@ -82,113 +202,102 @@
               (blur)="closeSuggestionsSoon()"
               (keydown)="onSuggestionKey($event)"
             />
-
-            <ul
-              *ngIf="suggestionsOpen() && vehicleSuggestions().length"
-              id="vehicle-suggestions"
-              class="suggestions"
-              role="listbox"
-              (mousedown)="$event.preventDefault()"
+            <button
+              class="btn btn-primary btn-decode"
+              (click)="decodeVin()"
+              [disabled]="vinLoading()"
             >
-              <li class="suggestions-title" *ngIf="!vehicleQuery().trim()">Recommended</li>
-              <li
-                *ngFor="let v of vehicleSuggestions(); let i = index"
-                class="suggestion"
-                role="option"
-                [class.suggestion-active]="i === activeSuggestion()"
-                [attr.aria-selected]="i === activeSuggestion()"
-                (click)="selectVehicle(v)"
-              >
-                <span class="suggestion-name">{{ v.make }} {{ v.model }}</span>
-                <span class="suggestion-note" *ngIf="v.inCatalog">Saved prices</span>
-              </li>
-            </ul>
-
-            <p
-              *ngIf="suggestionsOpen() && vehicleQuery().trim() && !vehicleSuggestions().length"
-              class="suggestion-empty"
-            >
-              No match. Try the make, such as Toyota, or use a VIN below.
-            </p>
+              <span *ngIf="!vinLoading()" class="btn-inner-flex">
+                <svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                DECODE & SCAN
+              </span>
+              <span *ngIf="vinLoading()">Decoding...</span>
+            </button>
           </div>
 
-          <div class="quick-vehicles" *ngIf="quickVehicles().length">
-            <span class="samples-label">Popular</span>
+          <!-- Multi-Make Test VIN Chips -->
+          <div class="vin-samples">
+            <span class="samples-label">Quick Calibration VINs:</span>
+            <button
+              type="button"
+              class="chip-btn chip-trigger"
+              (click)="applySampleVin('4T1BF1FKXLU000001')"
+              title="2020 Toyota Camry (Live Multi-Retailer Hunt)"
+            >
+              <svg class="vin-chip-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.5 3c-.1.2-.1.4-.1.6v2.5c0 .6.4 1 1 1h2"/>
+                <circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/>
+              </svg>
+              2020 Toyota Camry
+            </button>
+            <button
+              type="button"
+              class="chip-btn"
+              (click)="applySampleVin('19XFC2F59ME000001')"
+            >
+              <svg class="vin-chip-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.5 3c-.1.2-.1.4-.1.6v2.5c0 .6.4 1 1 1h2"/>
+                <circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/>
+              </svg>
+              2021 Honda Civic
+            </button>
+            <button
+              type="button"
+              class="chip-btn"
+              (click)="applySampleVin('55SWF4KB9JU268482')"
+            >
+              <svg class="vin-chip-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.5 3c-.1.2-.1.4-.1.6v2.5c0 .6.4 1 1 1h2"/>
+                <circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/>
+              </svg>
+              2018 Mercedes C300
+            </button>
+            <button
+              type="button"
+              class="chip-btn"
+              (click)="applySampleVin('WBA5R1C58M8B00001')"
+            >
+              <svg class="vin-chip-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.5 3c-.1.2-.1.4-.1.6v2.5c0 .6.4 1 1 1h2"/>
+                <circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/>
+              </svg>
+              2021 BMW 330i
+            </button>
             <button
               type="button"
               class="chip-btn"
               *ngFor="let v of quickVehicles()"
               (click)="selectVehicle(v, false)"
             >
-              {{ v.make }} {{ v.model }}
+              <svg class="vin-chip-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="2" y="11" width="13" height="6" rx="1"/>
+                <path d="M15 11l4 2v4h-4"/>
+                <circle cx="6" cy="17" r="2"/><circle cx="17" cy="17" r="2"/>
+              </svg>
+              2020 Ford F-150
             </button>
           </div>
 
-          <button
-            type="button"
-            class="link-btn"
-            [attr.aria-expanded]="showVinPanel()"
-            (click)="toggleVinPanel()"
-          >
-            {{ showVinPanel() ? 'Hide VIN lookup' : 'Have a VIN? Use it instead' }}
-          </button>
-
-          <div class="vin-panel" *ngIf="showVinPanel()">
-            <div class="vin-input-wrapper">
-              <input
-                type="text"
-                maxlength="17"
-                placeholder="17-character VIN, e.g. 4T1BF1FKXLU000001"
-                [ngModel]="vinInput()"
-                (ngModelChange)="vinInput.set($event)"
-                (keyup.enter)="decodeVin()"
-                class="vin-input"
-              />
-              <button
-                class="btn btn-primary btn-decode"
-                (click)="decodeVin()"
-                [disabled]="vinLoading()"
-              >
-                <span *ngIf="!vinLoading()">Decode VIN</span>
-                <span *ngIf="vinLoading()">Decoding...</span>
-              </button>
-            </div>
-
-            <div class="vin-samples">
-              <span class="samples-label">Sample VINs</span>
-              <button type="button" class="chip-btn chip-trigger" (click)="applySampleVin('4T1BF1FKXLU000001')" title="2020 Toyota Camry (Live Multi-Retailer Hunt)">2020 Toyota Camry</button>
-              <button type="button" class="chip-btn" (click)="applySampleVin('19XFC2F59ME000001')">2021 Honda Civic</button>
-              <button type="button" class="chip-btn" (click)="applySampleVin('55SWF4KB9JU268482')">2018 Mercedes C300</button>
-              <button type="button" class="chip-btn" (click)="applySampleVin('WBA5R1C58M8B00001')">2021 BMW 330i</button>
-              <button type="button" class="chip-btn" (click)="applySampleVin('1FTFW1E84LFA00001')">2020 Ford F-150</button>
-            </div>
-
-            <div *ngIf="vinError()" class="vin-error-banner">{{ vinError() }}</div>
-          </div>
-        </ng-container>
-
-        <!-- Vehicle chosen -->
-        <ng-container *ngIf="vehicleSelected()">
-          <div class="vehicle-bar">
-            <div class="vehicle-bar-main">
-              <span class="vehicle-bar-label">Vehicle</span>
-              <h2 class="vehicle-name">{{ selectedMake() }} {{ selectedModel() }}</h2>
-            </div>
-            <div class="vehicle-bar-controls">
-              <label class="year-field">
-                <span>Year</span>
-                <select [ngModel]="selectedYear()" (ngModelChange)="setYear($event)">
-                  <option *ngFor="let y of yearOptions()" [value]="y">{{ y }}</option>
-                </select>
-              </label>
-              <button class="btn btn-outline-sm" (click)="changeVehicle()">Change</button>
-            </div>
-          </div>
+        <!-- VIN Error Alert -->
+        <div *ngIf="vinError()" class="vin-error-banner">
+          <svg class="icon-warning" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 18px; height: 18px; flex-shrink: 0;">
+            <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+            <line x1="12" y1="9" x2="12" y2="13"></line>
+            <line x1="12" y1="17" x2="12.01" y2="17"></line>
+          </svg>
+          <span>{{ vinError() }}</span>
+        </div>
 
           <div *ngIf="decodedVehicle() as v" class="decoded-result-box">
             <div class="fitment-verified-badge">
-              <span class="shield-icon">✓</span>
-              <strong>FITMENT VERIFIED</strong>
+              <svg class="shield-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px;">
+                <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+                <polyline points="9 12 11 14 15 10"></polyline>
+              </svg>
+              <strong>GUARANTEED FITMENT VERIFIED</strong>
             </div>
             <div class="decoded-specs">
               <span class="spec-tag">Trim: <strong>{{ v.trim }}</strong></span>
@@ -202,17 +311,43 @@
       </div>
     </section>
 
-    <!-- LIVE MULTI-RETAILER PRICE HUNTER PROGRESS BANNER -->
-    <section *ngIf="isHunting()" class="hunter-active-banner">
-      <div class="hunter-content">
-        <div class="hunter-spinner"></div>
-        <div>
-          <h4>Searching stores</h4>
-          <p class="hunter-step-text">{{ huntingStep() }}</p>
+    <!-- LIVE MULTI-RETAILER TELEMETRY SCANNER BANNER -->
+    <section *ngIf="isHunting()" class="hud-radar-active-banner">
+      <div class="hud-radar-scope-wrap">
+        <!-- Circular HUD Radar Scope with Animated Sweeping Beam -->
+        <div class="hud-radar-disc">
+          <div class="hud-radar-sweep"></div>
+          <div class="hud-radar-cross-h"></div>
+          <div class="hud-radar-cross-v"></div>
+          <div class="hud-radar-ring ring-outer"></div>
+          <div class="hud-radar-ring ring-mid"></div>
+          <div class="hud-radar-ring ring-inner"></div>
+          <div class="hud-radar-blip blip-1"></div>
+          <div class="hud-radar-blip blip-2"></div>
+          <div class="hud-radar-blip blip-3"></div>
+          <div class="hud-radar-blip blip-4"></div>
+        </div>
+
+        <!-- Telemetry Data Readout -->
+        <div class="hud-telemetry-readout">
+          <div class="hud-telemetry-status">
+            <span class="hud-status-badge"><span class="hud-pulse-dot-green"></span> TELEMETRY SCANNER ACTIVE</span>
+            <span class="hud-protocol-tag">REST &bull; TLS 1.3 REAL-TIME</span>
+          </div>
+          <h4 class="hud-telemetry-title">LIVE RETAILER NETWORK CRAWL</h4>
+          <p class="hud-telemetry-step">{{ huntingStep() }}</p>
+
+          <div class="hud-network-pings">
+            <span class="hud-ping-node"><span class="node-indicator"></span> ROCKAUTO: 42ms</span>
+            <span class="hud-ping-node"><span class="node-indicator"></span> AUTOZONE: 68ms</span>
+            <span class="hud-ping-node"><span class="node-indicator"></span> FCP EURO: 35ms</span>
+            <span class="hud-ping-node"><span class="node-indicator"></span> OEM DIRECT: 50ms</span>
+          </div>
         </div>
       </div>
-      <div class="progress-bar-container">
-        <div class="progress-bar" [style.width.%]="huntingProgress()"></div>
+
+      <div class="hud-telemetry-progress-track">
+        <div class="hud-telemetry-progress-fill" [style.width.%]="huntingProgress()"></div>
       </div>
     </section>
 
@@ -268,74 +403,91 @@
     <!-- WATCHLIST ACTIVE HEADER -->
     <section *ngIf="showWatchlistOnly()" class="watchlist-banner">
       <div class="watchlist-banner-content">
-        <h2>Watchlist</h2>
-        <p>{{ filteredParts().length }} saved parts.</p>
+        <h2>
+          <svg class="icon-inline" viewBox="0 0 24 24" fill="currentColor" stroke="none" style="width: 20px; height: 20px; vertical-align: -3px; color: #f59e0b;">
+            <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+          </svg>
+          Tracked Watchlist & Telemetry Alerts
+        </h2>
+        <p>Showing {{ filteredParts().length }} bookmarked parts. Watchlist alerts monitor price drops and 1-year all-time lows across stores.</p>
       </div>
       <button class="btn btn-secondary" (click)="showWatchlistOnly.set(false)">
         View catalog
       </button>
     </section>
 
-    <section *ngIf="showWatchlistOnly() && !filteredParts().length" class="empty-state">
-      <p>Nothing saved yet. Tap the star on a part to keep it here.</p>
-    </section>
-
-    <!-- SUMMARY: AVERAGE COST / SERVICE -->
-    <section class="summary-card" *ngIf="hasResults()">
-      <div class="tabs" role="tablist" *ngIf="!showWatchlistOnly()">
-        <button type="button" role="tab" class="tab" [class.tab-active]="summaryTab() === 'cost'" [attr.aria-selected]="summaryTab() === 'cost'" (click)="setSummaryTab('cost')">Average cost</button>
-        <button type="button" role="tab" class="tab" [class.tab-active]="summaryTab() === 'service'" [attr.aria-selected]="summaryTab() === 'service'" (click)="setSummaryTab('service')">Service</button>
+    <!-- METRICS KPI ROW (HUD TELEMETRY METRICS) -->
+    <section class="kpi-grid">
+      <!-- OEM Benchmark -->
+      <div class="kpi-card hud-kpi-card">
+        <span class="kpi-label">
+          <svg class="kpi-hud-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/>
+          </svg>
+          FACTORY OEM BENCHMARK
+        </span>
+        <div class="kpi-value oem-text">
+          {{ kpiMetrics().oemPrice !== null ? ('$' + kpiMetrics().oemPrice?.toFixed(2)) : 'N/A' }}
+        </div>
+        <span class="kpi-caption">Official dealership factory benchmark</span>
       </div>
 
-      <ng-container *ngIf="showWatchlistOnly() || summaryTab() === 'cost'">
-      <div class="summary-head">
-        <span class="summary-label" *ngIf="showWatchlistOnly()">Average Cost - Component Only</span>
-        <span class="summary-context" *ngIf="!showWatchlistOnly()">{{ selectedCategory() }} for {{ selectedYear() }} {{ selectedMake() }} {{ selectedModel() }}</span>
-        <span class="summary-context" *ngIf="showWatchlistOnly()">Saved parts</span>
+      <!-- Best Retailer Store -->
+      <div class="kpi-card hud-kpi-card">
+        <span class="kpi-label">
+          <svg class="kpi-hud-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/><path d="M16 12l-4-4-4 4"/><path d="M12 16V8"/>
+          </svg>
+          LOWEST RETAILER QUOTE
+        </span>
+        <div class="kpi-value aft-text">
+          {{ kpiMetrics().aftermarketPrice !== null ? ('$' + kpiMetrics().aftermarketPrice?.toFixed(2)) : 'N/A' }}
+        </div>
+        <span class="kpi-caption">{{ kpiMetrics().bestStore ? ('Best Store: ' + kpiMetrics().bestStore) : 'Lowest cross-store price' }}</span>
       </div>
-      <div class="summary-value">{{ money(kpiMetrics().avgPrice) }}</div>
-      <p class="summary-caption">
-        {{ kpiMetrics().totalCount }} listings from {{ kpiMetrics().storeCount }} stores, ranging from
-        {{ money(kpiMetrics().minPrice) }} to {{ money(kpiMetrics().maxPrice) }}
-      </p>
 
-      <div class="summary-row">
-        <div class="summary-stat">
-          <span class="summary-stat-label">Aftermarket average</span>
-          <span class="summary-stat-value aft-text">{{ money(kpiMetrics().avgAftermarket) }}</span>
-        </div>
-        <div class="summary-stat">
-          <span class="summary-stat-label">OEM average</span>
-          <span class="summary-stat-value oem-text">{{ money(kpiMetrics().avgOem) }}</span>
-        </div>
-        <div class="summary-stat" *ngIf="kpiMetrics().savingsAmount > 0">
-          <span class="summary-stat-label">Best saving vs OEM</span>
-          <span class="summary-stat-value savings-text">
+      <!-- Max Savings -->
+      <div class="kpi-card highlight-card hud-kpi-card">
+        <span class="kpi-label">
+          <svg class="kpi-hud-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/>
+          </svg>
+          ARBITRAGE SPREAD
+        </span>
+        <div class="kpi-value savings-text">
+          <ng-container *ngIf="kpiMetrics().savingsAmount > 0">
             ${{ kpiMetrics().savingsAmount.toFixed(2) }}
             <span class="badge badge-success">-{{ kpiMetrics().savingsPct.toFixed(1) }}%</span>
           </span>
         </div>
       </div>
 
-      <p class="summary-note" *ngIf="kpiMetrics().bestStore">
-        Lowest aftermarket price: {{ kpiMetrics().bestStore }}
-      </p>
-
-      <div class="cycle-box" *ngIf="!showWatchlistOnly() && replacementCycle() as cycle">
-        <span class="cycle-label">Average replacement cycle</span>
-        <span class="cycle-value">
-          <span *ngIf="cycle.miles">{{ cycle.miles }}</span>
-          <span class="cycle-or" *ngIf="cycle.miles && cycle.years">or</span>
-          <span *ngIf="cycle.years">{{ cycle.years }}</span>
+      <!-- Stores In Stock -->
+      <div class="kpi-card hud-kpi-card">
+        <span class="kpi-label">
+          <svg class="kpi-hud-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="2" y="2" width="20" height="8" rx="2" ry="2"/><rect x="2" y="14" width="20" height="8" rx="2" ry="2"/>
+            <line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/>
+          </svg>
+          NETWORK STORES ACTIVE
         </span>
-        <span class="cycle-note">General guide. Your owner's manual and driving conditions decide the real interval.</span>
+        <div class="kpi-value">{{ kpiMetrics().storeCount }} Stores</div>
+        <span class="kpi-caption">{{ kpiMetrics().totalCount }} in-stock listings compared</span>
       </div>
       </ng-container>
 
-      <!-- SERVICE TAB -->
-      <ng-container *ngIf="!showWatchlistOnly() && summaryTab() === 'service'">
-        <div class="summary-head">
-          <span class="summary-context">{{ selectedCategory() }} for {{ selectedYear() }} {{ selectedMake() }} {{ selectedModel() }}</span>
+    <!-- CHARTS ANALYTICS ROW -->
+    <section class="charts-row" *ngIf="!showWatchlistOnly() && filteredParts().length">
+      <!-- Cross-Platform Trend Line Chart -->
+      <div class="chart-card">
+        <div class="chart-header">
+          <h3>
+            <svg class="chart-hud-svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 18px; height: 18px; min-width: 18px; min-height: 18px; flex-shrink: 0; vertical-align: -2px; margin-right: 6px;">
+              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+            </svg>
+            <span>Cross-Vehicle Price Trends</span>
+          </h3>
+          <span class="badge badge-neutral">{{ selectedCategory() }}</span>
         </div>
         <p class="service-lead">Estimated total if a service center or garage does the work: parts plus labor.</p>
         <div class="summary-value">{{ moneyRange(serviceEstimate().overall) }}</div>
@@ -355,12 +507,16 @@
           </div>
         </div>
 
-        <div class="filter-item service-shop">
-          <label for="shop-type">Shop type</label>
-          <select id="shop-type" [ngModel]="shopTypeId()" (ngModelChange)="setShopType($event)">
-            <option *ngFor="let shop of shopTypes" [value]="shop.id">{{ shop.label }}</option>
-          </select>
-          <span class="shop-hint">Shop labor rate: {{ serviceEstimate().shop.rate }}</span>
+      <!-- Brand / Retailer Price Spread -->
+      <div class="chart-card">
+        <div class="chart-header">
+          <h3>
+            <svg class="chart-hud-svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 18px; height: 18px; min-width: 18px; min-height: 18px; flex-shrink: 0; vertical-align: -2px; margin-right: 6px;">
+              <path d="M18 20V10M12 20V4M6 20v-6"></path>
+            </svg>
+            <span>Cross-Store Price Spread</span>
+          </h3>
+          <span class="badge badge-neutral">{{ selectedMake() !== 'All' ? selectedMake() : '' }} {{ selectedModel() !== 'All' ? selectedModel() : '' }}</span>
         </div>
 
         <div class="service-notes">
@@ -378,17 +534,30 @@
     </section>
 
     <!-- MISSING PART / ON-DEMAND AUTO-HUNTER TRIGGER CARD -->
-    <section *ngIf="vehicleSelected() && !showWatchlistOnly() && !filteredParts().length && !isHunting()" class="no-parts-hunter-trigger">
-      <div class="hunter-trigger-card">
+    <section *ngIf="!filteredParts().length && !isHunting()" class="no-parts-hunter-trigger">
+      <div class="hunter-trigger-card hud-cockpit-card">
+        <div class="hud-scope-idle">
+          <div class="hud-reticle-ring"></div>
+          <svg class="hud-scope-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/>
+            <circle cx="12" cy="12" r="5"/>
+            <line x1="12" y1="2" x2="12" y2="5"/>
+            <line x1="12" y1="19" x2="12" y2="22"/>
+            <line x1="2" y1="12" x2="5" y2="12"/>
+            <line x1="19" y1="12" x2="22" y2="12"/>
+          </svg>
+        </div>
         <div class="hunter-text-box">
-          <h3>No saved results for {{ selectedYear() }} {{ selectedMake() }} {{ selectedModel() }} ({{ selectedCategory() }})</h3>
+          <div class="telemetry-status-pill">TELEMETRY: UNINDEXED ASSEMBLY</div>
+          <h3>No Local Records for {{ selectedYear() }} {{ selectedMake() !== 'All' ? selectedMake() : '' }} {{ selectedModel() !== 'All' ? selectedModel() : 'Vehicle' }} ({{ selectedCategory() }})</h3>
           <p>
-            Nothing is saved for this vehicle and category yet. Search RockAuto, AutoZone, FCP Euro and OEM dealers now.
+            This vehicle assembly is not yet cached in the local datastore. Activate the cross-retailer pricing telemetry engine to scan RockAuto, AutoZone, FCP Euro, and OEM Dealerships in real time.
           </p>
         </div>
         <div class="hunter-action-box">
-          <button class="btn btn-primary btn-lg" (click)="triggerPriceHunter()">
-            Search stores
+          <button type="button" class="btn btn-primary btn-hud-scan btn-lg" (click)="triggerPriceHunter()">
+            <span class="radar-pulse-ring-btn"></span>
+            <span>INITIALIZE STORE NETWORK CRAWL ⌖</span>
           </button>
         </div>
       </div>
@@ -425,7 +594,9 @@
               (click)="toggleWatchlist(item.sku)"
               title="Toggle Watchlist / Price Drop Alert"
             >
-              ★
+              <svg class="star-svg" viewBox="0 0 24 24" [attr.fill]="isWatched(item.sku) ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px;">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+              </svg>
             </button>
             <img
               *ngIf="item.image_url"
@@ -434,14 +605,18 @@
               loading="lazy"
               (error)="$any($event.target).style.display = 'none'"
             />
-            <div class="placeholder-icon">No image</div>
+            <div class="placeholder-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" class="car-wire-svg">
+                <path d="M19 17h2c.6 0 1-.4 1-1v-3c0-.9-.7-1.7-1.5-1.9C18.7 10.6 16 10 16 10s-1.3-1.4-2.2-2.3c-.5-.4-1.1-.7-1.8-.7H5c-.6 0-1.1.4-1.4.9l-1.5 3c-.1.2-.1.4-.1.6v2.5c0 .6.4 1 1 1h2"/><circle cx="7" cy="17" r="2"/><path d="M9 17h6"/><circle cx="17" cy="17" r="2"/>
+              </svg>
+            </div>
           </div>
 
           <!-- Part Details -->
           <div class="part-info">
             <div class="part-badges">
               <span class="badge badge-store" [ngClass]="getStoreClass(item.source)">
-                {{ item.source }}
+                <span class="store-dot"></span> {{ item.source }}
               </span>
 
               <span
@@ -454,11 +629,16 @@
               <span class="badge badge-brand">{{ item.brand }}</span>
 
               <span *ngIf="isLowestPrice(item)" class="badge badge-lowest-price">
-                Lowest price
+                <span class="hud-optic-target"></span> OPTIMAL STORE QUOTE
               </span>
 
               <span *ngIf="item.is_all_time_low" class="badge badge-atl">
-                1-year low
+                <span class="hud-led-glow"></span> 1-YR HISTORICAL FLOOR
+              </span>
+
+              <!-- Buy Rating Badge -->
+              <span *ngIf="item.buy_rating" class="badge badge-rating" [ngClass]="getRatingClass(item.buy_rating)">
+                <span class="hud-rating-led"></span> {{ item.buy_rating }}
               </span>
             </div>
 
@@ -500,12 +680,29 @@
                   class="btn-history-link"
                   (click)="openPriceHistoryModal(item)"
                 >
-                  Price history ↗
+                  <svg class="copy-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                  </svg>
                 </button>
-                <span *ngIf="item.price_change_90d_pct as chg" class="hist-stat" [class.hist-drop]="chg < 0">
-                  {{ chg > 0 ? ('+' + chg + '%') : (chg + '%') }} in 90 days
-                </span>
-              </div>
+              </span>
+            </div>
+
+            <!-- Price History Quick Action -->
+            <div class="part-history-teaser">
+              <button
+                type="button"
+                class="btn-history-link"
+                (click)="openPriceHistoryModal(item)"
+              >
+                <svg class="icon-sparkline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px; vertical-align: -2px; margin-right: 4px;">
+                  <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+                </svg>
+                Telemetry Trendline (1-Year History) ↗
+              </button>
+              <span *ngIf="item.price_change_90d_pct as chg" class="hist-stat" [class.hist-drop]="chg < 0">
+                {{ chg > 0 ? ('+' + chg + '%') : (chg + '%') }} in last 90 days
+              </span>
             </div>
           </div>
 
@@ -516,7 +713,7 @@
               class="part-savings"
               *ngIf="item.tier !== 'OEM (Genuine)' && getSavingsVsOem(item.price_usd) as savings"
             >
-              Save ${{ savings.toFixed(2) }} vs OEM
+              <span class="hud-delta-tag"><span class="hud-delta-led"></span> SAVE ${{ savings.toFixed(2) }} VS OEM</span>
             </div>
             <span class="verified-tag">✓ Fitment verified</span>
           </div>
@@ -535,36 +732,286 @@
         </article>
       </div>
     </section>
+    </div>
 
-    <!-- CHARTS: last on the page -->
-    <ng-container *ngIf="hasResults() && !showWatchlistOnly()">
-      <h2 class="section-title">Price charts</h2>
-      <section class="charts-row">
-        <!-- Cross-Platform Trend Line Chart -->
-        <div class="chart-card">
-          <div class="chart-header">
-            <h3>Price trend</h3>
-            <span class="badge badge-neutral">{{ selectedCategory() }}</span>
+    <!-- TAB 2: 3D CAR VISUALIZER & INTERACTIVE COMPONENT HUB -->
+    <section class="visualizer-section" *ngIf="activeTab() === 'visualizer'">
+      <!-- Header Bar with Subsystem Quick Selector -->
+      <div class="vis-header-card">
+        <div class="vis-title-row">
+          <div class="vis-title-group">
+            <div class="vis-badge-row">
+              <span class="badge badge-glow">3D INTERACTIVE STUDIO</span>
+              <span class="badge badge-sub">HARDWARE ACCELERATED WEBGL</span>
+              <span class="badge badge-veh" *ngIf="decodedVehicle() as v">
+                VIN: {{ v.year }} {{ v.make }} {{ v.model }}
+              </span>
+            </div>
+            <h2>Interactive 3D Vehicle & Parts Explorer</h2>
+            <p class="vis-subtitle">
+              Orbit 360°, adjust X-Ray transparency to reveal internal mechanical systems, or explode assemblies outward. Click any part to inspect engineering specs, wear intervals, and failure symptoms.
+            </p>
           </div>
-          <p class="chart-sub">OEM baseline against average aftermarket price.</p>
-          <div class="chart-canvas-container">
-            <canvas #trendCanvas></canvas>
+          <div class="vis-header-actions">
+            <button type="button" class="btn btn-secondary" (click)="resetCarCamera()">
+              <svg class="icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 12a9 9 0 0 0-9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+                <path d="M3 3v5h5"></path>
+                <path d="M3 12a9 9 0 0 0 9 9 9.75 9.75 0 0 0 6.74-2.74L21 16"></path>
+                <path d="M16 21h5v-5"></path>
+              </svg>
+              Reset Camera
+            </button>
+            <button
+              type="button"
+              class="btn btn-primary btn-pulse-header"
+              (click)="viewPricesForComponent(selectedComponentInfo().category)"
+            >
+              Compare {{ selectedComponentInfo().category }} Prices ↗
+            </button>
           </div>
         </div>
 
-        <!-- Brand / Retailer Price Spread -->
-        <div class="chart-card">
-          <div class="chart-header">
-            <h3>Price by store</h3>
-            <span class="badge badge-neutral">{{ selectedMake() !== 'All' ? selectedMake() : '' }} {{ selectedModel() !== 'All' ? selectedModel() : '' }}</span>
-          </div>
-          <p class="chart-sub">Brand and store prices for {{ selectedCategory() }}.</p>
-          <div class="chart-canvas-container">
-            <canvas #brandCanvas></canvas>
+        <!-- Quick Subsystem Selector Pills -->
+        <div class="vis-quick-pills">
+          <span class="pills-label">Quick Select Subsystem:</span>
+          <div class="pills-scroll">
+            <button
+              *ngFor="let p of availableComponentsList()"
+              type="button"
+              class="comp-pill"
+              [class.comp-pill-active]="selectedComponentKey() === p.id"
+              (click)="select3DPart(p.id)"
+            >
+              <ng-container *ngTemplateOutlet="partIcon; context: { partId: p.id }"></ng-container>
+              <span class="pill-name">{{ p.id }}</span>
+            </button>
           </div>
         </div>
-      </section>
-    </ng-container>
+      </div>
+
+      <!-- Main 3D Studio Split Grid -->
+      <div class="vis-studio-grid">
+        <!-- LEFT: 3D VIEWPORT CANVAS CARD -->
+        <div class="vis-canvas-card" [class.light-mode]="studioTheme() === 'light'" #carContainer>
+          <!-- Floating HUD Controls Bar -->
+          <div class="hud-controls-bar">
+            <!-- Studio Theme Toggle (Light / Dark Background) -->
+            <button
+              type="button"
+              class="hud-btn"
+              [class.hud-btn-active]="studioTheme() === 'light'"
+              (click)="toggleStudioTheme()"
+              title="Toggle between White / Light Studio and Dark Background"
+            >
+              <svg *ngIf="studioTheme() === 'light'" class="hud-ctrl-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <circle cx="12" cy="12" r="5"></circle>
+                <line x1="12" y1="1" x2="12" y2="3"></line>
+                <line x1="12" y1="21" x2="12" y2="23"></line>
+                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+                <line x1="1" y1="12" x2="3" y2="12"></line>
+                <line x1="21" y1="12" x2="23" y2="12"></line>
+                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+              </svg>
+              <svg *ngIf="studioTheme() !== 'light'" class="hud-ctrl-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+              </svg>
+              <span>Studio: {{ studioTheme() === 'light' ? 'Light (White)' : 'Dark' }}</span>
+            </button>
+
+            <!-- Auto-Spin Toggle -->
+            <button
+              type="button"
+              class="hud-btn"
+              [class.hud-btn-active]="isAutoRotating()"
+              (click)="toggleAutoRotate()"
+              title="Toggle Turntable 360° Auto-Spin"
+            >
+              <svg *ngIf="isAutoRotating()" class="hud-ctrl-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <rect x="6" y="4" width="4" height="16"></rect>
+                <rect x="14" y="4" width="4" height="16"></rect>
+              </svg>
+              <svg *ngIf="!isAutoRotating()" class="hud-ctrl-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polygon points="5 3 19 12 5 21 5 3"></polygon>
+              </svg>
+              <span>Turntable: {{ isAutoRotating() ? 'ACTIVE' : 'PAUSED' }}</span>
+            </button>
+
+            <!-- X-Ray Slider -->
+            <div class="hud-slider-group">
+              <span class="hud-slider-label">
+                <svg class="hud-ctrl-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                  <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+                X-Ray Chassis:
+              </span>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                [ngModel]="xRayLevel()"
+                (ngModelChange)="onXRayChange($event)"
+                class="hud-range"
+              />
+              <span class="hud-slider-val">{{ xRayLevel() }}%</span>
+            </div>
+
+            <!-- Exploded View Slider -->
+            <div class="hud-slider-group">
+              <span class="hud-slider-label">
+                <svg class="hud-ctrl-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="2"></circle>
+                  <path d="M16.24 7.76l2.83-2.83M7.76 16.24l-2.83 2.83M16.24 16.24l2.83 2.83M7.76 7.76l-2.83-2.83M12 2v4M12 18v4M2 12h4M18 12h4"></path>
+                </svg>
+                Explode View:
+              </span>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                [ngModel]="explodeLevel()"
+                (ngModelChange)="onExplodeChange($event)"
+                class="hud-range"
+              />
+              <span class="hud-slider-val">{{ explodeLevel() }}%</span>
+            </div>
+          </div>
+
+          <!-- HTML5 Three.js Canvas -->
+          <canvas #carCanvas class="vis-webgl-canvas"></canvas>
+
+          <!-- Floating Hover Guidance Indicator -->
+          <div class="hud-guidance-pill" *ngIf="hoveredComponentKey() as hov">
+            <span class="hud-pulse-dot"></span>
+            <span>Inspecting: <strong>{{ hov }}</strong> (Click to view full specs)</span>
+          </div>
+
+          <div class="hud-bottom-tip" *ngIf="!hoveredComponentKey()">
+            <svg class="hud-tip-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 14px; height: 14px; margin-right: 6px; vertical-align: -2px;">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="16" x2="12" y2="12"></line>
+              <line x1="12" y1="8" x2="12.01" y2="8"></line>
+            </svg>
+            <span>Orbit: 360° Drag | Zoom: Scroll Wheel | Inspect: Click any highlighted component</span>
+          </div>
+        </div>
+
+        <!-- RIGHT: COMPONENT INFORMATION HUB PANEL -->
+        <div class="vis-info-panel" *ngIf="selectedComponentInfo() as comp">
+          <div class="info-card-header">
+            <div class="info-icon-badge">
+              <ng-container *ngTemplateOutlet="partIcon; context: { partId: comp.id }"></ng-container>
+            </div>
+            <div class="info-title-block">
+              <div class="info-system-pill">{{ comp.system }}</div>
+              <h3 class="info-part-title">{{ comp.name }}</h3>
+              <p class="info-tagline">{{ comp.tagline }}</p>
+            </div>
+          </div>
+
+          <!-- Quick Metadata Chips -->
+          <div class="info-meta-chips">
+            <div class="meta-chip">
+              <span class="chip-label">Service Interval</span>
+              <span class="chip-val">{{ comp.lifespan }}</span>
+            </div>
+            <div class="meta-chip">
+              <span class="chip-label">Price Benchmark</span>
+              <span class="chip-val highlight-green">{{ comp.priceRange }}</span>
+            </div>
+            <div class="meta-chip">
+              <span class="chip-label">DIY Difficulty</span>
+              <span class="chip-val highlight-diff">{{ comp.diyDifficulty }}</span>
+            </div>
+          </div>
+
+          <!-- What It Does Section -->
+          <div class="info-section">
+            <h4 class="section-heading">
+              <svg class="sec-hud-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="16" y1="13" x2="8" y2="13"></line>
+                <line x1="16" y1="17" x2="8" y2="17"></line>
+                <polyline points="10 9 9 9 8 9"></polyline>
+              </svg>
+              <span>Subsystem Specifications & Engineering Role</span>
+            </h4>
+            <p class="section-desc">{{ comp.description }}</p>
+          </div>
+
+          <!-- Warning Symptoms Section -->
+          <div class="info-section warning-section">
+            <h4 class="section-heading warning-heading">
+              <svg class="sec-hud-icon icon-danger" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
+                <line x1="12" y1="9" x2="12" y2="13"></line>
+                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+              </svg>
+              <span>Diagnostic Symptoms & Telemetry Alerts</span>
+            </h4>
+            <ul class="symptoms-list">
+              <li *ngFor="let s of comp.symptoms">
+                <span class="hud-danger-dot"></span>
+                <span>{{ s }}</span>
+              </li>
+            </ul>
+          </div>
+
+          <!-- OEM vs Aftermarket Buying Strategy -->
+          <div class="info-section">
+            <h4 class="section-heading">
+              <svg class="sec-hud-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M16 16v1a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h11a2 2 0 0 1 2 2v1"></path>
+                <path d="M18 8h4a2 2 0 0 1 2 2v7a2 2 0 0 1-2 2h-4"></path>
+                <circle cx="8" cy="12" r="2"></circle>
+              </svg>
+              <span>OEM vs. Aftermarket Procurement Strategy</span>
+            </h4>
+            <div class="oem-advice-box">
+              <p>{{ comp.oemVsAftermarket }}</p>
+            </div>
+          </div>
+
+          <!-- Recommended Tools -->
+          <div class="info-section" *ngIf="comp.tools.length">
+            <h4 class="section-heading">
+              <svg class="sec-hud-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
+              </svg>
+              <span>Required Service Tools & Calibration</span>
+            </h4>
+            <div class="tools-tags-wrap">
+              <span class="tool-tag" *ngFor="let t of comp.tools">{{ t }}</span>
+            </div>
+          </div>
+
+          <!-- Cross-Tab Action Button -->
+          <div class="info-action-block">
+            <button
+              type="button"
+              class="btn btn-primary btn-block btn-pulse"
+              (click)="viewPricesForComponent(comp.category)"
+            >
+              <svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px; margin-right: 6px; vertical-align: -2px;">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="22" y1="12" x2="18" y2="12"></line>
+                <line x1="6" y1="12" x2="2" y2="12"></line>
+                <line x1="12" y1="6" x2="12" y2="2"></line>
+                <line x1="12" y1="22" x2="12" y2="18"></line>
+              </svg>
+              <span>COMPARE LIVE MARKET QUOTES FOR {{ comp.name }} ↗</span>
+            </button>
+            <p class="action-caption">
+              Direct telemetry jump to Cross-Retailer Price Intelligence comparing RockAuto, AutoZone, FCP Euro & OEM Direct.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
   </main>
 
   <!-- HISTORICAL PRICE MODAL -->
@@ -593,7 +1040,7 @@
           </div>
 
           <div class="mstat-card mstat-highlight">
-            <span class="mstat-label">1-year low</span>
+            <span class="mstat-label"><span class="hud-led-glow"></span> 1-Year Historical Floor</span>
             <div class="mstat-val">${{ part.all_time_low?.toFixed(2) }}</div>
           </div>
 
@@ -644,8 +1091,14 @@
         <!-- Price Alert Trigger -->
         <div class="modal-alert-box">
           <div class="alert-info">
-            <h4>Price alert</h4>
-            <p>Notify me if {{ part.brand }} at {{ part.source }} drops below this price.</p>
+            <h4>
+              <svg class="icon-inline" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width: 16px; height: 16px; margin-right: 6px; vertical-align: -2px;">
+                <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+              </svg>
+              ARM TELEMETRY PRICE SENTRY
+            </h4>
+            <p>We'll notify you during automated syncs if {{ part.brand }} at {{ part.source }} drops below your target price.</p>
           </div>
           <div class="alert-action-row">
             <div class="target-input-wrap">

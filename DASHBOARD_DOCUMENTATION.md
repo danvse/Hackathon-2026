@@ -23,36 +23,39 @@ Build an intuitive, fast, production-grade Web Dashboard that ingests multi-vend
 ```
 +-----------------------------------------------------------------------------------+
 |                                 USER CLIENT (Web)                                 |
-|   Responsive UI: Next.js 14 / Streamlit | Dark & Light Mode | Mobile-Friendly     |
+|   Responsive UI: Angular 22 | Standalone Components & Signals | Digital Cockpit   |
+|   3D Interactive WebGL Studio (Three.js) | Dark & Studio Light Mode               |
 +-----------------------------------------------------------------------------------+
                                          │
                          HTTPS / REST / WebSocket
                                          ▼
 +-----------------------------------------------------------------------------------+
 |                                APPLICATION SERVER                                 |
-|  - Fast API Endpoints: /api/parts, /api/trends, /api/brands                       |
-|  - In-Memory Analytics: DuckDB / SQLite (WAL) / PostgreSQL                        |
-|  - Outbound Link Handler & UTM Tracker (Link Forwarding)                         |
+|  - REST API Endpoints: /api/decode-vin, /api/hunt-prices, /api/history           |
+|  - Multi-Retailer Scraping Engine: RockAuto, AutoZone, FCP Euro, OEM Dealerships  |
+|  - In-Memory Analytics: DuckDB / SQLite / JSON Datastore                          |
+|  - Outbound Link Handler & Deep Retailer Navigation                               |
 +-----------------------------------------------------------------------------------+
                                          ▲
                                          │ Incremental Sync (Cron)
 +-----------------------------------------------------------------------------------+
 |                              DATA PIPELINE / STORAGE                              |
-|  - Ingestion Engine: `collect_mercedes_parts.py` (curl_cffi Stealth Scraping)     |
-|  - Flat Storage: `mercedes_parts_data.csv` -> Parquet / Database Cache           |
-|  - Automatic deduplication & schema validation                                    |
+|  - Ingestion Engine: `collect_mercedes_parts.py` & `enrich_historical_data.py`    |
+|  - Flat Storage: `mercedes_parts_data.json` / `mercedes_parts_data.csv`           |
+|  - Guaranteed Fitment & NHTSA VPIC Vehicle Specs Engine                           |
 +-----------------------------------------------------------------------------------+
 ```
 
-### 2.1 Technology Options
+### 2.1 Technology Stack
 
-| Component | Enterprise Angular Stack (Production) | Fast Prototyping Stack |
-| :--- | :--- | :--- |
-| **Frontend** | Angular 22 (Standalone Components + Signals) | Streamlit / Dash with Custom CSS |
-| **Charts** | Chart.js / Canvas Interactive Visuals | Plotly Python Visuals |
-| **Data Engine** | In-Memory JSON Cache / DuckDB / REST API | Pandas / DuckDB |
-| **State / Cache** | Angular Signals (`computed`, `effect`) | `@st.cache_data` / LocalStorage |
-| **Data Feed** | Scheduled Python Worker (`collect_mercedes_parts.py`) | Local Cron / Systemd Timer |
+| Component | Pure Angular Production Architecture |
+| :--- | :--- |
+| **Frontend** | Angular 22 (Standalone Components + Signals + Reactive State) |
+| **3D Vehicle Studio** | Three.js (WebGL Hardware Accelerated Interactive Car Visualizer) |
+| **Charts & Analytics** | Chart.js 4 (Cross-Vehicle Price Trends & Cross-Store Price Spread) |
+| **Backend API** | Python Flask + Flask-CORS (`api_server.py`) |
+| **State / Cache** | Angular Signals (`signal`, `computed`, `effect`) & LocalStorage |
+| **Data Feed** | Real-time Multi-Retailer Web Scraper (`api_server.py`) |
 
 ---
 
@@ -156,164 +159,33 @@ CREATE INDEX idx_part_num ON parts_inventory(part_number);
 
 ---
 
-## 6. Implementation Reference: Streamlit Dashboard Code
+## 6. Implementation Architecture: Angular 22 Dashboard & 3D WebGL Studio
 
-Below is the turnkey, production-ready implementation that directly consumes `mercedes_parts_data.csv`:
+The frontend is built as a pure, standalone Angular 22 Single Page Application located in `car-parts-dashboard/`:
 
-```python
-# app.py - Production-Ready Auto Parts Comparison Dashboard
-import streamlit as st
-import pandas as pd
-import plotly.express as px
-import plotly.graph_objects as go
-import os
+### 6.1 Component Hierarchy & Modules
+* **`app.ts`**: Standalone Angular component implementing reactive state management via Signals:
+  - **Universal VIN Decoder**: Decodes any 17-character VIN (Toyota, Honda, Ford, BMW, Mercedes, etc.) via NHTSA VPIC API.
+  - **Multi-Store Price Hunter**: Queries RockAuto, AutoZone, FCP Euro, and OEM Dealerships dynamically.
+  - **KPI Telemetry Engine**: Computes OEM Benchmark, lowest aftermarket quote, arbitrage spread, and network availability.
+  - **Interactive Watchlist**: Bookmarks parts with local persistence and triggers price-drop sentry alerts.
+  - **Dual Chart.js Engines**: Renders Cross-Vehicle Price Trends and Cross-Store Price Spread bar charts.
+* **`app.html`**: Automotive Digital Cockpit telemetry interface featuring:
+  - **Precision Blueprint SVGs (`#partIcon`)**: 11 mechanical subsystem vector icons (brakes, powertrain, electrical, fluid, suspension).
+  - **Radar Scope Scanner**: Animated 360° radar sweep beam with live retailer ping blips.
+  - **3D Studio Canvas**: OrbitControls viewport with turntable rotation, light/dark studio background toggle, chassis X-Ray aperture, and exploded assembly view.
+  - **Component Information Hub**: Deep engineering specifications, wear intervals, failure symptoms, and procurement advice.
+* **`car-3d-scene.ts`**: Three.js WebGL scene engine with procedural chassis geometry, component raycasting, and studio lighting.
+* **`api_server.py`**: Python Flask REST API server providing on-demand VIN decoding and multi-retailer scraping.
 
-st.set_page_config(
-    page_title="Mercedes-Benz Parts Price Comparison",
-    page_icon="🚗",
-    layout="wide",
-    initial_sidebar_state="expanded"
-)
+### 6.2 Running the Application
+```bash
+# 1. Start the Background Price Hunter API Server (Port 5000)
+python api_server.py
 
-# 1. Load & Cache Data
-@st.cache_data(ttl=600)
-def load_data(csv_path="mercedes_parts_data.csv"):
-    if not os.path.exists(csv_path):
-        return pd.DataFrame()
-    df = pd.read_csv(csv_path)
-    # Categorize brand tier
-    df["tier"] = df["brand"].apply(
-        lambda b: "OEM (Genuine)" if "Genuine" in str(b) else "Aftermarket"
-    )
-    return df
-
-df = load_data()
-
-if df.empty:
-    st.error("No data found! Run collect_mercedes_parts.py first.")
-    st.stop()
-
-# 2. Sidebar Filter Controls
-st.sidebar.title("🔍 Fitment & Filters")
-model_list = sorted(df["model"].unique().tolist())
-selected_model = st.sidebar.selectbox("Select Model", model_list, index=0)
-
-year_list = sorted(df[df["model"] == selected_model]["year"].unique().tolist())
-selected_year = st.sidebar.selectbox("Select Year", year_list, index=0)
-
-category_list = sorted(df["part_category"].unique().tolist())
-selected_category = st.sidebar.selectbox("Part Category", category_list, index=0)
-
-brand_options = ["All Brands"] + sorted(df["brand"].unique().tolist())
-selected_brand = st.sidebar.selectbox("Filter Brand", brand_options)
-
-search_term = st.sidebar.text_input("Search Part # or Keyword", "").strip().lower()
-
-# 3. Filter Dataset
-filtered = df[
-    (df["model"] == selected_model) &
-    (df["year"] == selected_year) &
-    (df["part_category"] == selected_category)
-]
-
-if selected_brand != "All Brands":
-    filtered = filtered[filtered["brand"] == selected_brand]
-
-if search_term:
-    filtered = filtered[
-        filtered["part_name"].str.lower().str.contains(search_term) |
-        filtered["part_number"].astype(str).str.contains(search_term) |
-        filtered["brand"].str.lower().str.contains(search_term)
-    ]
-
-# 4. Header & Top Metrics
-st.title(f"🚗 {selected_year} Mercedes-Benz {selected_model} — {selected_category}")
-st.caption("Live comparison between OEM Genuine parts and Tier-1 aftermarket brands.")
-
-col1, col2, col3, col4 = st.columns(4)
-
-oem_parts = filtered[filtered["tier"] == "OEM (Genuine)"]
-aftermarket_parts = filtered[filtered["tier"] == "Aftermarket"]
-
-oem_price = oem_parts["price_usd"].min() if not oem_parts.empty else None
-best_aftermarket_price = aftermarket_parts["price_usd"].min() if not aftermarket_parts.empty else None
-
-with col1:
-    st.metric("OEM Genuine Price", f"${oem_price:.2f}" if oem_price else "N/A")
-with col2:
-    st.metric("Best Aftermarket", f"${best_aftermarket_price:.2f}" if best_aftermarket_price else "N/A")
-with col3:
-    if oem_price and best_aftermarket_price:
-        savings = oem_price - best_aftermarket_price
-        pct = (savings / oem_price) * 100
-        st.metric("Max Savings", f"${savings:.2f}", f"-{pct:.1f}%")
-    else:
-        st.metric("Max Savings", "N/A")
-with col4:
-    st.metric("Available Options", f"{len(filtered)} parts")
-
-st.markdown("---")
-
-# 5. Interactive Price Trend & Differences Graph
-st.subheader("📈 Price Trends & Cross-Model Comparison")
-
-trend_df = df[df["part_category"] == selected_category].copy()
-trend_df["vehicle"] = trend_df["year"].astype(str) + " " + trend_df["model"]
-
-trend_summary = trend_df.groupby(["vehicle", "tier"])["price_usd"].mean().reset_index()
-
-fig = px.line(
-    trend_summary,
-    x="vehicle",
-    y="price_usd",
-    color="tier",
-    markers=True,
-    title=f"Average Price Trend for '{selected_category}' by Vehicle Platform",
-    labels={"vehicle": "Vehicle Platform", "price_usd": "Average Price (USD)", "tier": "Part Tier"},
-    color_discrete_map={"OEM (Genuine)": "#e63946", "Aftermarket": "#1d3557"}
-)
-fig.update_layout(template="plotly_white", hovermode="x unified", height=380)
-st.plotly_chart(fig, use_container_width=True)
-
-# 6. Detailed Comparison Table with Clickable Retailer Navigation
-st.subheader("🛒 Part Listings & Direct Store Links")
-
-if filtered.empty:
-    st.info("No parts match the selected filters.")
-else:
-    # Format table for display
-    display_df = filtered.sort_values(by="price_usd", ascending=True).copy()
-    
-    for idx, row in display_df.iterrows():
-        with st.container():
-            c_img, c_info, c_price, c_btn = st.columns([1, 4, 2, 2])
-            
-            with c_img:
-                if pd.notna(row["image_url"]) and str(row["image_url"]).startswith("http"):
-                    st.image(row["image_url"], width=80)
-                else:
-                    st.write("📦")
-            
-            with c_info:
-                st.markdown(f"**{row['part_name']}**")
-                st.caption(f"Brand: **{row['brand']}** | Part #: `{row['part_number']}` | SKU: `{row['sku']}`")
-                if row["tier"] == "OEM (Genuine)":
-                    st.markdown("⭐ *Genuine OEM Quality*")
-                else:
-                    st.markdown("🔧 *Certified Aftermarket*")
-
-            with c_price:
-                st.markdown(f"### ${row['price_usd']:.2f}")
-                if oem_price and row["tier"] != "OEM (Genuine)":
-                    diff = oem_price - row["price_usd"]
-                    if diff > 0:
-                        st.caption(f"🟢 Save ${diff:.2f} vs OEM")
-
-            with c_btn:
-                st.write("")
-                st.link_button("View on Retailer ↗", row["product_url"], use_container_width=True)
-            
-            st.divider()
+# 2. Launch the Angular Web Dashboard (Port 4200)
+cd car-parts-dashboard
+npm start
 ```
 
 ---
@@ -326,10 +198,11 @@ To keep the dataset constantly fresh in production:
 * Run with the `--overwrite` flag or allow deduplicated appends to track historical prices.
 
 ### 7.2 Hosting & CDN Deployment
-1. **Frontend / App Server**: Deploy via **Docker** on AWS ECS / DigitalOcean App Platform or Streamlit Cloud.
-2. **Reverse Proxy & SSL**: Nginx with Let's Encrypt SSL and Cloudflare CDN caching for static image assets.
-3. **Database Migration**:
-   * Migrate CSV storage to **PostgreSQL** or **DuckDB** once volume exceeds 50,000 parts.
+1. **Frontend / Web App**: Deploy the compiled Angular application (`dist/car-parts-dashboard`) to **Vercel**, **Cloudflare Pages**, or **AWS S3 + CloudFront CDN**.
+2. **API Server**: Containerize `api_server.py` via **Docker** on AWS ECS / DigitalOcean App Platform.
+3. **Reverse Proxy & SSL**: Nginx with Let's Encrypt SSL and Cloudflare CDN caching for static image assets.
+4. **Database Migration**:
+   * Migrate JSON / CSV flat files to **PostgreSQL** or **DuckDB** once volume exceeds 50,000 parts.
 
 ---
 

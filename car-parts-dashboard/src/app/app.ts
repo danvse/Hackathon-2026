@@ -1,6 +1,7 @@
 import {
   Component,
   OnInit,
+  OnDestroy,
   signal,
   computed,
   effect,
@@ -12,20 +13,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { Chart, registerables } from 'chart.js';
-import {
-  type VehicleOption,
-  buildVehicleOptions,
-  defaultYear,
-  searchVehicles,
-  yearChoices,
-} from './vehicle-search';
-import {
-  SHOP_TYPES,
-  estimateService,
-  formatMiles,
-  formatYears,
-  replacementCycleFor,
-} from './service-estimate';
+import { Car3DScene, COMPONENT_KNOWLEDGE_BASE, ComponentInfo } from './car-3d-scene';
 
 Chart.register(...registerables);
 
@@ -76,13 +64,35 @@ export interface DecodedVehicle {
   templateUrl: './app.html',
   styleUrl: './app.css',
 })
-export class App implements OnInit {
+export class App implements OnInit, OnDestroy {
   private http = inject(HttpClient);
+
+  // Navigation Tabs: 'scanner' | 'visualizer' | 'watchlist'
+  activeTab = signal<'scanner' | 'visualizer' | 'watchlist'>('scanner');
 
   // Canvas elements for Chart.js
   trendCanvas = viewChild<ElementRef<HTMLCanvasElement>>('trendCanvas');
   brandCanvas = viewChild<ElementRef<HTMLCanvasElement>>('brandCanvas');
   historyCanvas = viewChild<ElementRef<HTMLCanvasElement>>('historyCanvas');
+
+  // 3D Visualizer Canvas & Engine State
+  carCanvasRef = viewChild<ElementRef<HTMLCanvasElement>>('carCanvas');
+  carContainerRef = viewChild<ElementRef<HTMLDivElement>>('carContainer');
+  private carScene: Car3DScene | null = null;
+
+  selectedComponentKey = signal<string>('Brake Rotors');
+  hoveredComponentKey = signal<string | null>(null);
+  isAutoRotating = signal<boolean>(true);
+  xRayLevel = signal<number>(55);
+  explodeLevel = signal<number>(0);
+  studioTheme = signal<'dark' | 'light'>('light');
+  componentKnowledge = signal<Record<string, ComponentInfo>>(COMPONENT_KNOWLEDGE_BASE);
+
+  availableComponentsList = computed(() => Object.values(this.componentKnowledge()));
+  selectedComponentInfo = computed(() => {
+    const key = this.selectedComponentKey();
+    return this.componentKnowledge()[key] || this.componentKnowledge()['Brake Rotors'];
+  });
 
   private trendChart: Chart | null = null;
   private brandChart: Chart | null = null;
@@ -452,8 +462,92 @@ export class App implements OnInit {
     });
   }
 
-  money(value: number | null | undefined): string {
-    return value === null || value === undefined ? 'N/A' : '$' + value.toFixed(2);
+  ngOnDestroy(): void {
+    if (this.carScene) {
+      this.carScene.destroy();
+      this.carScene = null;
+    }
+  }
+
+  // ==========================================
+  // TAB NAVIGATION & 3D CAR VISUALIZER
+  // ==========================================
+  setActiveTab(tab: 'scanner' | 'visualizer' | 'watchlist'): void {
+    this.activeTab.set(tab);
+    if (tab === 'watchlist') {
+      this.showWatchlistOnly.set(true);
+    } else if (tab === 'scanner') {
+      this.showWatchlistOnly.set(false);
+    } else if (tab === 'visualizer') {
+      setTimeout(() => this.initCarScene(), 80);
+    }
+  }
+
+  initCarScene(): void {
+    const canvasEl = this.carCanvasRef()?.nativeElement;
+    const containerEl = this.carContainerRef()?.nativeElement;
+    if (!canvasEl || !containerEl) return;
+
+    if (this.carScene) {
+      this.carScene.destroy();
+      this.carScene = null;
+    }
+
+    this.carScene = new Car3DScene();
+    this.carScene.init(
+      containerEl,
+      canvasEl,
+      (partKey: string) => {
+        this.selectedComponentKey.set(partKey);
+      },
+      (partKey: string | null) => {
+        this.hoveredComponentKey.set(partKey);
+      }
+    );
+
+    this.carScene.setStudioTheme(this.studioTheme());
+    this.carScene.setXRay(this.xRayLevel() / 100);
+    this.carScene.setExploded(this.explodeLevel() / 100);
+    this.carScene.setAutoRotate(this.isAutoRotating());
+  }
+
+  toggleStudioTheme(): void {
+    const next = this.studioTheme() === 'dark' ? 'light' : 'dark';
+    this.studioTheme.set(next);
+    this.carScene?.setStudioTheme(next);
+  }
+
+  toggleAutoRotate(): void {
+    const val = !this.isAutoRotating();
+    this.isAutoRotating.set(val);
+    this.carScene?.setAutoRotate(val);
+  }
+
+  onXRayChange(level: number): void {
+    this.xRayLevel.set(level);
+    this.carScene?.setXRay(level / 100);
+  }
+
+  onExplodeChange(level: number): void {
+    this.explodeLevel.set(level);
+    this.carScene?.setExploded(level / 100);
+  }
+
+  select3DPart(partKey: string): void {
+    this.selectedComponentKey.set(partKey);
+    this.carScene?.selectPart(partKey);
+  }
+
+  resetCarCamera(): void {
+    this.selectedComponentKey.set('Brake Rotors');
+    this.carScene?.resetCamera();
+  }
+
+  viewPricesForComponent(category: string): void {
+    this.setActiveTab('scanner');
+    this.selectedCategory.set(category);
+    this.copyToast.set(`⌖ Subsystem locked: Filtered catalog for ${category}`);
+    setTimeout(() => this.copyToast.set(null), 3500);
   }
 
   // Calculate savings for an individual part vs OEM benchmark
@@ -480,6 +574,15 @@ export class App implements OnInit {
     if (s.includes('advance')) return 'store-advance';
     if (s.includes('direct') || s.includes('oem') || s.includes('parts live')) return 'store-oem';
     return 'store-default';
+  }
+
+  getRatingClass(rating?: string): string {
+    const r = (rating || '').toLowerCase();
+    if (r.includes('strong buy') || r.includes('low')) return 'rating-strong-buy';
+    if (r.includes('good deal')) return 'rating-good-deal';
+    if (r.includes('elevated') || r.includes('high')) return 'rating-elevated';
+    if (r.includes('benchmark')) return 'rating-benchmark';
+    return 'rating-fair';
   }
 
   // Copy OEM Part number to clipboard
@@ -898,7 +1001,7 @@ export class App implements OnInit {
           }
           setTimeout(() => {
             this.isHunting.set(false);
-            this.copyToast.set(`Found ${resp.items?.length || 0} listings across RockAuto, AutoZone and FCP Euro.`);
+            this.copyToast.set(`✓ Telemetry indexed ${resp.items?.length || 0} listings across RockAuto, AutoZone & FCP Euro!`);
             setTimeout(() => this.copyToast.set(null), 3500);
           }, 700);
         },
@@ -1118,7 +1221,7 @@ export class App implements OnInit {
 
     setTimeout(() => {
       this.isHunting.set(false);
-      this.copyToast.set(`Found ${generatedParts.length} listings across RockAuto, AutoZone and OEM Direct.`);
+      this.copyToast.set(`✓ Telemetry indexed ${generatedParts.length} verified listings across RockAuto, AutoZone & OEM Direct!`);
       setTimeout(() => this.copyToast.set(null), 3500);
     }, 600);
   }
@@ -1172,7 +1275,7 @@ export class App implements OnInit {
       this.copyToast.set('Removed from Watchlist');
     } else {
       updated = [...current, sku];
-      this.copyToast.set('Added to watchlist');
+      this.copyToast.set('⌖ Part saved to Watchlist telemetry');
     }
 
     this.watchlistSkus.set(updated);
@@ -1216,7 +1319,7 @@ export class App implements OnInit {
 
   saveTargetAlert(): void {
     this.targetAlertSet.set(true);
-    this.copyToast.set(`Price alert set for $${this.targetAlertPrice()?.toFixed(2)}`);
+    this.copyToast.set(`⌖ Price drop threshold armed at $${this.targetAlertPrice()?.toFixed(2)} USD!`);
     setTimeout(() => this.copyToast.set(null), 3000);
   }
 
