@@ -2508,3 +2508,315 @@
   height: 15px;
   vertical-align: -2px;
 }
+
+/* =========================================================
+   3D ADVANCED FEATURES: FULLSCREEN, WEAR TELEMETRY & AUDIO
+   ========================================================= */
+
+/* Fullscreen 3D Viewport Mode */
+.vis-canvas-card.fullscreen-mode {
+  position: fixed !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  max-width: 100vw !important;
+  z-index: 99999 !important;
+  border-radius: 0 !important;
+  border: none !important;
+  margin: 0 !important;
+  box-shadow: none !important;
+}
+
+.vis-canvas-card.fullscreen-mode .hud-controls-bar {
+  top: 20px;
+  left: 20px;
+  right: 20px;
+  padding: 10px 18px;
+}
+
+.hud-fullscreen-btn {
+  margin-left: auto;
+}
+
+/* HUD Mileage Wear Slider */
+.hud-mileage-group {
+  background: rgba(15, 23, 42, 0.55);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+  padding: 4px 10px;
+  border-radius: 8px;
+}
+
+.hud-mileage-range {
+  width: 110px;
+  accent-color: #f59e0b;
+}
+
+.highlight-val {
+  color: #f59e0b;
+  font-weight: 800;
+  letter-spacing: 0.02em;
+}
+
+.vis-canvas-card.light-mode .hud-mileage-group {
+  background: rgba(254, 243, 199, 0.6);
+  border-color: rgba(217, 119, 6, 0.35);
+}
+
+.vis-canvas-card.light-mode .highlight-val {
+  color: #b45309;
+}
+
+/* Wear & Degradation Telemetry Meter */
+.wear-telemetry-box {
+  background: #0f172a;
+  border: 1px solid #1e293b;
+  border-radius: 12px;
+  padding: 12px 14px;
+  color: #f8fafc;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.wear-telemetry-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.wear-label-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.wear-sub-label {
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: #94a3b8;
+}
+
+.wear-status-badge {
+  font-size: 0.65rem;
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 20px;
+  border: 1px solid currentColor;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  text-transform: uppercase;
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.hud-led-glow {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  box-shadow: 0 0 6px currentColor;
+}
+
+.wear-pct-readout {
+  font-size: 0.88rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: 0.02em;
+}
+
+.wear-track {
+  height: 8px;
+  background: #1e293b;
+  border-radius: 999px;
+  overflow: hidden;
+  position: relative;
+}
+
+.wear-fill {
+  height: 100%;
+  border-radius: 999px;
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.3s ease;
+  box-shadow: 0 0 10px currentColor;
+}
+
+.wear-footer-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.72rem;
+  color: #64748b;
+}
+
+.wear-footer-row strong {
+  color: #cbd5e1;
+}
+
+/* Acoustic Stethoscope Diagnostic Card */
+.acoustic-diag-card {
+  background: linear-gradient(135deg, #0b1120 0%, #111827 100%);
+  border: 1px solid #1f2937;
+  border-radius: 12px;
+  padding: 14px;
+  color: #f9fafb;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
+}
+
+.acoustic-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+}
+
+.acoustic-title-group {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.acoustic-hud-icon {
+  width: 24px;
+  height: 24px;
+  color: #38bdf8;
+  flex-shrink: 0;
+}
+
+.acoustic-title {
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  color: #f1f5f9;
+  margin: 0;
+}
+
+.acoustic-subtitle {
+  font-size: 0.7rem;
+  color: #94a3b8;
+  margin: 2px 0 0 0;
+  line-height: 1.3;
+}
+
+.hud-equalizer {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 18px;
+  padding: 2px 4px;
+  background: rgba(15, 23, 42, 0.6);
+  border-radius: 4px;
+  border: 1px solid rgba(56, 189, 248, 0.3);
+}
+
+.eq-bar {
+  width: 3px;
+  background: #38bdf8;
+  border-radius: 2px;
+  animation: eq-bounce 0.8s ease-in-out infinite alternate;
+}
+
+.eq-1 { height: 40%; animation-delay: 0.1s; }
+.eq-2 { height: 80%; animation-delay: 0.3s; }
+.eq-3 { height: 100%; animation-delay: 0.2s; }
+.eq-4 { height: 60%; animation-delay: 0.4s; }
+
+@keyframes eq-bounce {
+  0% { height: 20%; background: #0284c7; }
+  50% { height: 95%; background: #38bdf8; }
+  100% { height: 35%; background: #06b6d4; }
+}
+
+.acoustic-actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.btn-acoustic {
+  flex: 1;
+  min-width: 140px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: 1px solid transparent;
+}
+
+.sound-btn-icon {
+  width: 15px;
+  height: 15px;
+  flex-shrink: 0;
+}
+
+.btn-acoustic-normal {
+  background: rgba(16, 185, 129, 0.15);
+  border-color: rgba(16, 185, 129, 0.35);
+  color: #34d399;
+}
+
+.btn-acoustic-normal:hover {
+  background: rgba(16, 185, 129, 0.25);
+  border-color: #10b981;
+  color: #6ee7b7;
+}
+
+.btn-acoustic-normal.acoustic-active {
+  background: #10b981;
+  color: #022c22;
+  border-color: #34d399;
+  box-shadow: 0 0 12px rgba(16, 185, 129, 0.6);
+}
+
+.btn-acoustic-failure {
+  background: rgba(239, 68, 68, 0.15);
+  border-color: rgba(239, 68, 68, 0.35);
+  color: #f87171;
+}
+
+.btn-acoustic-failure:hover {
+  background: rgba(239, 68, 68, 0.25);
+  border-color: #ef4444;
+  color: #fca5a5;
+}
+
+.btn-acoustic-failure.acoustic-active {
+  background: #ef4444;
+  color: #450a0a;
+  border-color: #f87171;
+  box-shadow: 0 0 12px rgba(239, 68, 68, 0.6);
+  animation: warning-pulse 1s infinite alternate;
+}
+
+@keyframes warning-pulse {
+  0% { box-shadow: 0 0 6px rgba(239, 68, 68, 0.4); }
+  100% { box-shadow: 0 0 16px rgba(239, 68, 68, 0.8); }
+}
+
+.btn-acoustic-stop {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  cursor: pointer;
+  background: rgba(244, 63, 94, 0.2);
+  border: 1px solid #f43f5e;
+  color: #fda4af;
+  transition: all 0.2s ease;
+}
+
+.btn-acoustic-stop:hover {
+  background: #f43f5e;
+  color: #ffffff;
+}
+

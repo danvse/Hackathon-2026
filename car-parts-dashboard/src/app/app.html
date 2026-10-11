@@ -923,7 +923,7 @@
       <!-- Main 3D Studio Split Grid -->
       <div class="vis-studio-grid">
         <!-- LEFT: 3D VIEWPORT CANVAS CARD -->
-        <div class="vis-canvas-card" [class.light-mode]="studioTheme() === 'light'" #carContainer>
+        <div class="vis-canvas-card" [class.light-mode]="studioTheme() === 'light'" [class.fullscreen-mode]="isFullscreen3D()" #carContainer>
           <!-- Floating HUD Controls Bar -->
           <div class="hud-controls-bar">
             <!-- Studio Theme Toggle (Light / Dark Background) -->
@@ -1008,6 +1008,50 @@
               />
               <span class="hud-slider-val">{{ explodeLevel() }}%</span>
             </div>
+
+            <!-- Mileage & Wear Simulation Slider -->
+            <div class="hud-slider-group hud-mileage-group">
+              <span class="hud-slider-label">
+                <svg class="hud-ctrl-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <polyline points="12 6 12 12 16 14"></polyline>
+                </svg>
+                Mileage Wear:
+              </span>
+              <input
+                type="range"
+                min="5000"
+                max="150000"
+                step="5000"
+                [ngModel]="vehicleMileage()"
+                (ngModelChange)="onMileageChange($event)"
+                class="hud-range hud-mileage-range"
+              />
+              <span class="hud-slider-val highlight-val">{{ vehicleMileage().toLocaleString() }} mi</span>
+            </div>
+
+            <!-- Fullscreen 3D Toggle Button -->
+            <button
+              type="button"
+              class="hud-btn hud-fullscreen-btn"
+              [class.hud-btn-active]="isFullscreen3D()"
+              (click)="toggleFullscreen3D()"
+              title="Toggle Fullscreen 3D Viewport"
+            >
+              <svg *ngIf="!isFullscreen3D()" class="hud-ctrl-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="15 3 21 3 21 9"></polyline>
+                <polyline points="9 21 3 21 3 15"></polyline>
+                <line x1="21" y1="3" x2="14" y2="10"></line>
+                <line x1="3" y1="21" x2="10" y2="14"></line>
+              </svg>
+              <svg *ngIf="isFullscreen3D()" class="hud-ctrl-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                <polyline points="4 14 10 14 10 20"></polyline>
+                <polyline points="20 10 14 10 14 4"></polyline>
+                <line x1="14" y1="10" x2="21" y2="3"></line>
+                <line x1="3" y1="21" x2="10" y2="14"></line>
+              </svg>
+              <span>{{ isFullscreen3D() ? 'Exit Fullscreen' : 'Fullscreen' }}</span>
+            </button>
           </div>
 
           <!-- HTML5 Three.js Canvas -->
@@ -1055,6 +1099,100 @@
             <div class="meta-chip">
               <span class="chip-label">DIY Difficulty</span>
               <span class="chip-val highlight-diff">{{ comp.diyDifficulty }}</span>
+            </div>
+          </div>
+
+          <!-- Component Wear & Degradation Telemetry Meter -->
+          <div class="wear-telemetry-box">
+            <div class="wear-telemetry-header">
+              <div class="wear-label-group">
+                <span class="wear-sub-label">TELEMETRY WEAR METER</span>
+                <span class="wear-status-badge" [style.color]="selectedComponentWear().statusColor" [style.borderColor]="selectedComponentWear().statusColor">
+                  <span class="hud-led-glow" [style.background]="selectedComponentWear().statusColor"></span>
+                  {{ selectedComponentWear().badge }}
+                </span>
+              </div>
+              <span class="wear-pct-readout" [style.color]="selectedComponentWear().statusColor">{{ selectedComponentWear().wearPct }}% WEAR</span>
+            </div>
+            <div class="wear-track">
+              <div
+                class="wear-fill"
+                [style.width.%]="selectedComponentWear().wearPct"
+                [style.background]="selectedComponentWear().statusColor"
+              ></div>
+            </div>
+            <div class="wear-footer-row">
+              <span>Expected Cycle: {{ comp.lifespan }}</span>
+              <span>Remaining Life: <strong>~{{ selectedComponentWear().remainingMiles.toLocaleString() }} mi</strong></span>
+            </div>
+          </div>
+
+          <!-- Acoustic Diagnostic Telemetry Stethoscope -->
+          <div class="acoustic-diag-card">
+            <div class="acoustic-header">
+              <div class="acoustic-title-group">
+                <svg class="acoustic-hud-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path>
+                  <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+                  <line x1="12" y1="19" x2="12" y2="22"></line>
+                </svg>
+                <div>
+                  <h4 class="acoustic-title">ACOUSTIC STETHOSCOPE DIAGNOSTICS</h4>
+                  <p class="acoustic-subtitle">Simulate real mechanical frequency: normal rotation vs. failure signature.</p>
+                </div>
+              </div>
+
+              <!-- Animated Equalizer bars when audio is playing -->
+              <div class="hud-equalizer" *ngIf="activeAudioPart() === comp.id">
+                <span class="eq-bar eq-1"></span>
+                <span class="eq-bar eq-2"></span>
+                <span class="eq-bar eq-3"></span>
+                <span class="eq-bar eq-4"></span>
+              </div>
+            </div>
+
+            <div class="acoustic-actions">
+              <button
+                type="button"
+                class="btn-acoustic btn-acoustic-normal"
+                [class.acoustic-active]="activeAudioPart() === comp.id && activeAudioType() === 'normal'"
+                (click)="playComponentAudio(comp.id, 'normal')"
+                title="Play healthy mechanical acoustic signature"
+              >
+                <svg class="sound-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                  <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                </svg>
+                <span>Normal Acoustic</span>
+              </button>
+
+              <button
+                type="button"
+                class="btn-acoustic btn-acoustic-failure"
+                [class.acoustic-active]="activeAudioPart() === comp.id && activeAudioType() === 'failure'"
+                (click)="playComponentAudio(comp.id, 'failure')"
+                title="Play diagnostic mechanical failure signature"
+              >
+                <svg class="sound-btn-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                  <path d="M19.07 4.93a10 10 0 0 1 0 14.14"></path>
+                  <path d="M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                </svg>
+                <span>Failure Diagnostic Audio</span>
+              </button>
+
+              <button
+                type="button"
+                class="btn-acoustic-stop"
+                *ngIf="activeAudioPart() === comp.id"
+                (click)="stopComponentAudio()"
+                title="Stop audio playback"
+              >
+                <svg class="sound-btn-icon" viewBox="0 0 24 24" fill="currentColor" stroke="none">
+                  <rect x="6" y="6" width="12" height="12" rx="1"></rect>
+                </svg>
+                <span>Stop</span>
+              </button>
             </div>
           </div>
 

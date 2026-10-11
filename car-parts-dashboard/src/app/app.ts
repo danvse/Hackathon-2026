@@ -14,6 +14,7 @@ import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { Chart, registerables } from 'chart.js';
 import { Car3DScene, COMPONENT_KNOWLEDGE_BASE, ComponentInfo } from './car-3d-scene';
+import { CarAudioDiagnosticsEngine } from './car-audio-diagnostics';
 
 Chart.register(...registerables);
 import {
@@ -106,6 +107,39 @@ export class App implements OnInit, OnDestroy {
   selectedComponentInfo = computed(() => {
     const key = this.selectedComponentKey();
     return this.componentKnowledge()[key] || this.componentKnowledge()['Brake Rotors'];
+  });
+
+  // Advanced 3D Telemetry: Mileage Simulation, Audio Diagnostics & Fullscreen
+  vehicleMileage = signal<number>(45000);
+  isFullscreen3D = signal<boolean>(false);
+  audioEngine = new CarAudioDiagnosticsEngine();
+  activeAudioPart = signal<string | null>(null);
+  activeAudioType = signal<'normal' | 'failure' | null>(null);
+
+  selectedComponentWear = computed(() => {
+    const comp = this.selectedComponentInfo();
+    const miles = this.vehicleMileage();
+    const lifespan = this.carScene?.getComponentLifespanMiles(comp.id) || 60000;
+    const wearPct = Math.min(100, Math.round(((miles % lifespan) / lifespan) * 100));
+    const remainingMiles = Math.max(0, lifespan - (miles % lifespan));
+
+    let badge = 'OPTIMAL HEALTH';
+    let statusColor = '#10b981';
+    if (wearPct >= 80) {
+      badge = 'CRITICAL WEAR - FAILURE IMMINENT';
+      statusColor = '#ef4444';
+    } else if (wearPct >= 50) {
+      badge = 'WEAR DETECTED - INSPECT SOON';
+      statusColor = '#f59e0b';
+    }
+
+    return {
+      wearPct,
+      remainingMiles,
+      lifespan,
+      badge,
+      statusColor,
+    };
   });
 
   private trendChart: Chart | null = null;
@@ -474,6 +508,12 @@ export class App implements OnInit, OnDestroy {
         this.loading.set(false);
       },
     });
+
+    // Fullscreen change listener
+    document.addEventListener('fullscreenchange', () => {
+      this.isFullscreen3D.set(!!document.fullscreenElement);
+      setTimeout(() => this.carScene?.onResize(), 80);
+    });
   }
 
   ngOnDestroy(): void {
@@ -481,6 +521,7 @@ export class App implements OnInit, OnDestroy {
       this.carScene.destroy();
       this.carScene = null;
     }
+    this.audioEngine.stopAll();
   }
 
   // ==========================================
@@ -523,6 +564,7 @@ export class App implements OnInit, OnDestroy {
     this.carScene.setXRay(this.xRayLevel() / 100);
     this.carScene.setExploded(this.explodeLevel() / 100);
     this.carScene.setAutoRotate(this.isAutoRotating());
+    this.carScene.setMileage(this.vehicleMileage());
   }
 
   toggleStudioTheme(): void {
@@ -545,6 +587,55 @@ export class App implements OnInit, OnDestroy {
   onExplodeChange(level: number): void {
     this.explodeLevel.set(level);
     this.carScene?.setExploded(level / 100);
+  }
+
+  onMileageChange(miles: number): void {
+    this.vehicleMileage.set(miles);
+    this.carScene?.setMileage(miles);
+  }
+
+  toggleFullscreen3D(): void {
+    const container = this.carContainerRef()?.nativeElement;
+    if (!container) return;
+
+    if (!document.fullscreenElement) {
+      if (container.requestFullscreen) {
+        container.requestFullscreen().then(() => {
+          this.isFullscreen3D.set(true);
+          setTimeout(() => this.carScene?.onResize(), 120);
+        }).catch(() => {
+          this.isFullscreen3D.set(!this.isFullscreen3D());
+          setTimeout(() => this.carScene?.onResize(), 120);
+        });
+      } else {
+        this.isFullscreen3D.set(!this.isFullscreen3D());
+        setTimeout(() => this.carScene?.onResize(), 120);
+      }
+    } else {
+      document.exitFullscreen?.().then(() => {
+        this.isFullscreen3D.set(false);
+        setTimeout(() => this.carScene?.onResize(), 120);
+      });
+    }
+  }
+
+  playComponentAudio(partId: string, type: 'normal' | 'failure'): void {
+    this.audioEngine.play(partId, type);
+    this.activeAudioPart.set(partId);
+    this.activeAudioType.set(type);
+
+    setTimeout(() => {
+      if (this.activeAudioPart() === partId && this.activeAudioType() === type) {
+        this.activeAudioPart.set(null);
+        this.activeAudioType.set(null);
+      }
+    }, 3200);
+  }
+
+  stopComponentAudio(): void {
+    this.audioEngine.stopAll();
+    this.activeAudioPart.set(null);
+    this.activeAudioType.set(null);
   }
 
   select3DPart(partKey: string): void {

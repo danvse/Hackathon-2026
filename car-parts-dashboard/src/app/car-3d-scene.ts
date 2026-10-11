@@ -292,6 +292,8 @@ export class Car3DScene {
   // Part meshes registry
   private partMeshes: Map<string, THREE.Mesh[]> = new Map();
   private originalMaterials: Map<THREE.Mesh, THREE.Material | THREE.Material[]> = new Map();
+  private wearMaterials: Map<THREE.Mesh, THREE.MeshStandardMaterial> = new Map();
+  private currentMileage = 35000;
 
   // Raycasting & Interaction
   private raycaster = new THREE.Raycaster();
@@ -389,6 +391,7 @@ export class Car3DScene {
 
     // 7. BUILD 3D CAR HIERARCHY
     this.buildCarModel();
+    this.updateWearMaterials();
 
     // 8. EVENT LISTENERS
     this.setupEvents();
@@ -853,6 +856,98 @@ export class Car3DScene {
     }
   }
 
+  setMileage(miles: number): void {
+    this.currentMileage = miles;
+    this.updateWearMaterials();
+    this.refreshMaterials();
+  }
+
+  onResize(): void {
+    if (!this.container || !this.renderer || !this.camera) return;
+    const width = this.container.clientWidth;
+    const height = this.container.clientHeight || 520;
+    this.camera.aspect = width / height;
+    this.camera.updateProjectionMatrix();
+    this.renderer.setSize(width, height);
+  }
+
+  getComponentLifespanMiles(key: string): number {
+    switch (key) {
+      case 'Oil Filter': return 10000;
+      case 'Air Filter':
+      case 'Cabin Air Filter': return 25000;
+      case 'Brake Pads': return 45000;
+      case 'Battery': return 45000;
+      case 'Brake Rotors': return 65000;
+      case 'Shock Absorbers': return 75000;
+      case 'Serpentine Belt': return 80000;
+      case 'Spark Plugs': return 90000;
+      case 'Alternator': return 100000;
+      default: return 120000;
+    }
+  }
+
+  getComponentWearFactor(key: string): number {
+    const lifespan = this.getComponentLifespanMiles(key);
+    const progress = (this.currentMileage % lifespan) / lifespan;
+    return THREE.MathUtils.clamp(progress, 0.0, 1.0);
+  }
+
+  private updateWearMaterials(): void {
+    this.partMeshes.forEach((meshes, key) => {
+      const wear = this.getComponentWearFactor(key);
+      meshes.forEach((mesh) => {
+        const orig = this.originalMaterials.get(mesh);
+        if (!orig || Array.isArray(orig) || !(orig instanceof THREE.MeshStandardMaterial)) return;
+
+        let wornMat = this.wearMaterials.get(mesh);
+        if (!wornMat) {
+          wornMat = orig.clone() as THREE.MeshStandardMaterial;
+          this.wearMaterials.set(mesh, wornMat);
+        }
+
+        if (key === 'Brake Rotors') {
+          const steel = new THREE.Color(0xd4d8df);
+          const scorched = new THREE.Color(0x3a3f47);
+          wornMat.color.copy(steel).lerp(scorched, wear);
+          wornMat.roughness = 0.2 + wear * 0.65;
+          if (wear > 0.8) {
+            wornMat.emissive.setHex(0xff3300);
+            wornMat.emissiveIntensity = (wear - 0.8) * 4.5;
+          } else {
+            wornMat.emissive.setHex(0x000000);
+            wornMat.emissiveIntensity = 0;
+          }
+        } else if (key === 'Air Filter' || key === 'Cabin Air Filter') {
+          const cleanYellow = new THREE.Color(0xffe066);
+          const sootCharcoal = new THREE.Color(0x222220);
+          wornMat.color.copy(cleanYellow).lerp(sootCharcoal, wear);
+          wornMat.roughness = 0.8 + wear * 0.18;
+        } else if (key === 'Spark Plugs') {
+          const cleanWhite = new THREE.Color(0xf5f5f7);
+          const fouledCarbon = new THREE.Color(0x181818);
+          wornMat.color.copy(cleanWhite).lerp(fouledCarbon, wear * 0.85);
+          wornMat.roughness = 0.3 + wear * 0.6;
+        } else if (key === 'Battery') {
+          const cleanDark = new THREE.Color(0x1a1a1a);
+          const corroded = new THREE.Color(0x334155);
+          wornMat.color.copy(cleanDark).lerp(corroded, wear * 0.5);
+          if (wear > 0.75) {
+            wornMat.emissive.setHex(0x64748b);
+            wornMat.emissiveIntensity = 0.25;
+          } else {
+            wornMat.emissive.setHex(0x000000);
+          }
+        } else {
+          const origColor = orig.color.clone();
+          const agedColor = origColor.clone().multiplyScalar(1.0 - wear * 0.35);
+          wornMat.color.copy(agedColor);
+          wornMat.roughness = THREE.MathUtils.clamp(orig.roughness + wear * 0.4, 0.1, 0.95);
+        }
+      });
+    });
+  }
+
   private refreshMaterials(): void {
     this.partMeshes.forEach((meshes, key) => {
       const isSelected = key === this.selectedPartKey;
@@ -864,7 +959,7 @@ export class Car3DScene {
         } else if (isHovered) {
           mesh.material = this.hoverMaterial;
         } else {
-          mesh.material = this.originalMaterials.get(mesh) || mesh.material;
+          mesh.material = this.wearMaterials.get(mesh) || this.originalMaterials.get(mesh) || mesh.material;
         }
       });
     });
