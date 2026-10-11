@@ -3,6 +3,8 @@
   "version": "0.0.0",
   "scripts": {
     "ng": "ng",
+    "generate:audio": "node scripts/generate-car-audio.js",
+    "prebuild": "node scripts/generate-car-audio.js",
     "start": "ng serve",
     "build": "ng build",
     "watch": "ng build --watch --configuration development",

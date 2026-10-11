@@ -620,16 +620,22 @@ export class App implements OnInit, OnDestroy {
   }
 
   playComponentAudio(partId: string, type: 'normal' | 'failure'): void {
-    this.audioEngine.play(partId, type);
     this.activeAudioPart.set(partId);
     this.activeAudioType.set(type);
+
+    this.audioEngine.play(partId, type, () => {
+      if (this.activeAudioPart() === partId && this.activeAudioType() === type) {
+        this.activeAudioPart.set(null);
+        this.activeAudioType.set(null);
+      }
+    });
 
     setTimeout(() => {
       if (this.activeAudioPart() === partId && this.activeAudioType() === type) {
         this.activeAudioPart.set(null);
         this.activeAudioType.set(null);
       }
-    }, 3200);
+    }, 3800);
   }
 
   stopComponentAudio(): void {

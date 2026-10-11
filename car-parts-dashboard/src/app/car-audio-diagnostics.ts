@@ -4,11 +4,25 @@
  * Synthesizes realistic mechanical operation & component failure sounds in real-time.
  * 100% offline, zero external audio asset dependencies.
  */
+const AUDIO_FILE_MAP: Record<string, { normal: string; failure: string }> = {
+  'Brake Rotors': { normal: '/audio/brakes-normal.wav', failure: '/audio/brakes-failure.wav' },
+  'Brake Pads': { normal: '/audio/brakes-normal.wav', failure: '/audio/brakes-failure.wav' },
+  'Alternator': { normal: '/audio/alternator-normal.wav', failure: '/audio/alternator-failure.wav' },
+  'Engine Block': { normal: '/audio/engine-normal.wav', failure: '/audio/engine-knock.wav' },
+  'Spark Plugs': { normal: '/audio/spark-normal.wav', failure: '/audio/spark-failure.wav' },
+  'Battery': { normal: '/audio/battery-normal.wav', failure: '/audio/battery-failure.wav' },
+  'Shock Absorbers': { normal: '/audio/shock-normal.wav', failure: '/audio/shock-failure.wav' },
+  'Air Filter': { normal: '/audio/filter-normal.wav', failure: '/audio/filter-failure.wav' },
+  'Cabin Air Filter': { normal: '/audio/filter-normal.wav', failure: '/audio/filter-failure.wav' },
+  'Oil Filter': { normal: '/audio/filter-normal.wav', failure: '/audio/filter-failure.wav' },
+};
+
 export class CarAudioDiagnosticsEngine {
   private ctx: AudioContext | null = null;
   private activeNodes: { stop: () => void }[] = [];
   private currentPartId: string | null = null;
   private currentType: 'normal' | 'failure' | null = null;
+  private bufferCache = new Map<string, AudioBuffer>();
 
   private initCtx(): AudioContext {
     if (!this.ctx) {
@@ -42,12 +56,65 @@ export class CarAudioDiagnosticsEngine {
     return { partId: this.currentPartId, type: this.currentType };
   }
 
-  play(partId: string, type: 'normal' | 'failure'): void {
+  async play(partId: string, type: 'normal' | 'failure', onEnded?: () => void): Promise<void> {
     this.stopAll();
     const ctx = this.initCtx();
     this.currentPartId = partId;
     this.currentType = type;
 
+    const audioUrl = AUDIO_FILE_MAP[partId]?.[type];
+    if (audioUrl) {
+      try {
+        let buffer = this.bufferCache.get(audioUrl);
+        if (!buffer) {
+          const res = await fetch(audioUrl);
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
+          const arrayBuf = await res.arrayBuffer();
+          buffer = await ctx.decodeAudioData(arrayBuf);
+          this.bufferCache.set(audioUrl, buffer);
+        }
+
+        // Check if playback was stopped or changed while fetching
+        if (this.currentPartId !== partId || this.currentType !== type) {
+          return;
+        }
+
+        const source = ctx.createBufferSource();
+        source.buffer = buffer;
+        const gainNode = ctx.createGain();
+        gainNode.gain.setValueAtTime(0.9, ctx.currentTime);
+        source.connect(gainNode);
+        gainNode.connect(ctx.destination);
+
+        source.onended = () => {
+          if (this.currentPartId === partId && this.currentType === type) {
+            this.currentPartId = null;
+            this.currentType = null;
+            onEnded?.();
+          }
+        };
+
+        source.start(0);
+        this.activeNodes.push({
+          stop: () => {
+            try {
+              source.stop();
+            } catch {
+              // ignore
+            }
+          }
+        });
+        return;
+      } catch (err) {
+        console.warn(`[CarAudioDiagnostics] Fallback to procedural synthesis for ${audioUrl}:`, err);
+      }
+    }
+
+    // Fallback to real-time procedural synthesis
+    this.playSynthesized(ctx, partId, type);
+  }
+
+  private playSynthesized(ctx: AudioContext, partId: string, type: 'normal' | 'failure'): void {
     switch (partId) {
       case 'Brake Rotors':
       case 'Brake Pads':
